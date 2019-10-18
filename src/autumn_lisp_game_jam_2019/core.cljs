@@ -4,7 +4,7 @@
 (enable-console-print!)
 
 (def player-speed 5)
-(def tile-map-cell-size 64)
+(def tile-size 64)
 (def tile-map [[1 1 1 0 0 1 1 1]
                [1 0 0 0 0 0 0 1]
                [1 0 0 0 0 0 0 1]
@@ -12,8 +12,7 @@
                [1 0 0 0 0 0 0 1]
                [1 0 0 0 0 0 0 1]
                [1 0 0 0 0 0 0 1]
-               [1 1 1 1 1 1 1 1]
-               ])
+               [1 1 1 1 1 1 1 1]])
 
 (defonce app-state (atom {:player {:pos [0 0]
                                    :vel [0 0]}}))
@@ -43,10 +42,10 @@
   (doall (map-indexed (fn [i row]
                         (doall (map-indexed (fn [j tile]
                                               (when (= tile 1)
-                                                (js/rect (* j tile-map-cell-size)
-                                                         (* i tile-map-cell-size)
-                                                         tile-map-cell-size
-                                                         tile-map-cell-size)))
+                                                (js/rect (* j tile-size)
+                                                         (* i tile-size)
+                                                         tile-size
+                                                         tile-size)))
                                             row)))
                       tile-map)))
 
