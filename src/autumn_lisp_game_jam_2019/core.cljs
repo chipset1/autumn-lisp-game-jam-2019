@@ -16,13 +16,17 @@
          (v/mult player-speed vel-direction)))
 
 (defn player-movement []
-  (when (js/keyIsDown js/UP_ARROW)
+  (when (or (js/keyIsDown 87)
+            (js/keyIsDown js/UP_ARROW))
     (player-vel [0 -1]))
-  (when (js/keyIsDown js/DOWN_ARROW)
+  (when (or (js/keyIsDown 83)
+            (js/keyIsDown js/DOWN_ARROW))
     (player-vel [0 1]))
-  (when (js/keyIsDown js/LEFT_ARROW)
+  (when (or (js/keyIsDown 65)
+            (js/keyIsDown js/LEFT_ARROW))
     (player-vel [-1 0]))
-  (when (js/keyIsDown js/RIGHT_ARROW)
+  (when (or (js/keyIsDown 68)
+            (js/keyIsDown js/RIGHT_ARROW))
     (player-vel [1 0])))
 
 (defn setup []
