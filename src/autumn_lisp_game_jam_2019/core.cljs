@@ -4,6 +4,16 @@
 (enable-console-print!)
 
 (def player-speed 5)
+(def tile-map-cell-size 64)
+(def tile-map [[1 1 1 0 0 1 1 1]
+               [1 0 0 0 0 0 0 1]
+               [1 0 0 0 0 0 0 1]
+               [1 0 0 0 0 0 0 1]
+               [1 0 0 0 0 0 0 1]
+               [1 0 0 0 0 0 0 1]
+               [1 0 0 0 0 0 0 1]
+               [1 1 1 1 1 1 1 1]
+               ])
 
 (defonce app-state (atom {:player {:pos [0 0]
                                    :vel [0 0]}}))
@@ -29,6 +39,17 @@
             (js/keyIsDown js/RIGHT_ARROW))
     (player-vel [1 0])))
 
+(defn draw-tile-map []
+  (doall (map-indexed (fn [i row]
+                        (doall (map-indexed (fn [j tile]
+                                              (when (= tile 1)
+                                                (js/rect (* j tile-map-cell-size)
+                                                         (* i tile-map-cell-size)
+                                                         tile-map-cell-size
+                                                         tile-map-cell-size)))
+                                            row)))
+                      tile-map)))
+
 (defn setup []
   (js/createCanvas 512 512))
 
@@ -37,6 +58,7 @@
   (js/fill 0)
   (js/rect (/ js/width 2) (/ js/height 2) 10 10)
   (player-movement)
+  (draw-tile-map)
   (js/rect (-> @app-state
                :player
                :pos
