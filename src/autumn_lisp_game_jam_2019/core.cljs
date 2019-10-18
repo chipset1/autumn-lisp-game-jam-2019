@@ -30,7 +30,7 @@
     (player-vel [1 0])))
 
 (defn setup []
-  (js/createCanvas 720 400))
+  (js/createCanvas 512 512))
 
 (defn draw []
   (js/background 50)
@@ -45,8 +45,8 @@
                :player
                :pos
                v/y)
-           10
-           10))
+           64
+           64))
 
 (doto js/window
   (aset "setup" setup)
