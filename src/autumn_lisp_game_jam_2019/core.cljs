@@ -4,7 +4,7 @@
 (enable-console-print!)
 
 (def player-speed 5)
-(def player-size 64)
+(def player-size 32)
 (def tile-size 64)
 (def tile-map [[1 1 1 1 1 1 1 1]
                [1 0 0 0 0 0 0 1]
