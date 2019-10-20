@@ -77,9 +77,17 @@
 (defn draw []
   (js/background 50)
   (js/fill 0)
-  (js/rect (/ js/width 2) (/ js/height 2) 10 10)
   (player-movement)
-  (draw-tile-map)
+  (js/translate (* -1 js/width (js/floor (/ (-> @app-state
+                                                :player
+                                                :pos
+                                                v/x)
+                                            js/width)))
+                (* -1 js/height (js/floor (/ (-> @app-state
+                                                :player
+                                                :pos
+                                                v/y)
+                                            js/height))))
   (js/rect (-> @app-state
                :player
                :pos
@@ -89,7 +97,9 @@
                :pos
                v/y)
            player-size
-           player-size))
+           player-size)
+  (draw-tile-map)
+  )
 
 (doto js/window
   (aset "setup" setup)
