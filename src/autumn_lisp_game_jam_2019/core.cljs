@@ -25,16 +25,69 @@
                [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
                ])
 
-(defonce app-state (atom {:player {:pos [256 256]}}))
+(defonce app-state (atom {:player {:pos [256 256]}
+                          :fantasy-tileset-image nil}))
+
+(defn draw-wall-tile [x y]
+  (js/image (:fantasy-tileset-image @app-state)
+            x
+            y
+            tile-size
+            tile-size
+            64
+            64
+            32
+            32))
+
+(defn draw-key [x y]
+  (js/image (:fantasy-tileset-image @app-state)
+            x
+            y
+            tile-size
+            tile-size
+            128
+            128
+            32
+            32))
+
+(defn draw-door [x y]
+  (js/image (:fantasy-tileset-image @app-state)
+            x
+            y
+            tile-size
+            tile-size
+            128
+            32
+            32
+            32))
+
+(defn draw-stairs [x y]
+  (js/image (:fantasy-tileset-image @app-state)
+            x
+            y
+            tile-size
+            tile-size
+            160
+            32
+            32
+            32))
+
+(defn draw-player [x y]
+  (js/image (:fantasy-tileset-image @app-state)
+            x
+            y
+            player-size
+            player-size
+            32
+            (* 20 32)
+            32
+            32))
 
 (defn draw-tile-map []
   (doall (map-indexed (fn [i row]
                         (doall (map-indexed (fn [j tile]
                                               (when (= tile 1)
-                                                (js/rect (* j tile-size)
-                                                         (* i tile-size)
-                                                         tile-size
-                                                         tile-size)))
+                                                (draw-wall-tile (* j tile-size) (* i tile-size))))
                                             row)))
                       tile-map)))
 
@@ -82,7 +135,13 @@
 
 
 (defn setup []
-  (js/createCanvas 512 512))
+  (js/createCanvas 512 512)
+  (js/noSmooth)
+  (swap! app-state
+         assoc
+         :fantasy-tileset-image
+         (js/loadImage "/assets/fantasy-tileset.png")))
+
 
 (defn draw []
   (js/background 50)
@@ -98,16 +157,14 @@
                                                 :pos
                                                 v/y)
                                             js/height))))
-  (js/rect (-> @app-state
-               :player
-               :pos
-               v/x)
-           (-> @app-state
-               :player
-               :pos
-               v/y)
-           player-size
-           player-size)
+  (draw-player (-> @app-state
+                   :player
+                   :pos
+                   v/x)
+               (-> @app-state
+                   :player
+                   :pos
+                   v/y))
   (draw-tile-map)
   )
 
