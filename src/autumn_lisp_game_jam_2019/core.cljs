@@ -25,8 +25,8 @@
                [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
                ])
 
-(defonce app-state (atom {:player {:pos [256 256]
-                                   :vel [0 0]}}))
+(defonce app-state (atom {:player {:pos [256 256]}}))
+
 (defn draw-tile-map []
   (doall (map-indexed (fn [i row]
                         (doall (map-indexed (fn [j tile]
