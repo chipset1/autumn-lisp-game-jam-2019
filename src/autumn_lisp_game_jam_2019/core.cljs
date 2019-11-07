@@ -31,7 +31,7 @@
 (defonce app-state (atom {:player {:pos [256 256]}
                           :key {:pos default-key-pos}
                           :exit {:pos default-exit-pos}
-                          :level {:player-exit? false
+                          :level {:door-locked? true
                                   :exit-transition 0}
                           :fantasy-tileset-image nil}))
 
@@ -177,12 +177,16 @@
 (defn reset-level []
   (swap! app-state
          assoc-in
+         [:key :pos]
+         default-key-pos)
+  (swap! app-state
+         assoc-in
          [:player :pos]
          [256 256])
   (swap! app-state
          assoc-in
-         [:level :player-exit?]
-         false))
+         [:level :door-locked?]
+         true))
 
 (defn setup []
   (js/createCanvas 512 512)
@@ -215,22 +219,21 @@
   (draw-stairs (-> @app-state
                    :exit
                    :pos))
-  (when (key-door-collision?)
+  (when (and (key-door-collision?)
+             (-> @app-state
+                 :level
+                 :door-locked?))
     (swap! app-state
            assoc-in
-           [:level :player-exit?]
-           true)
-    (swap! app-state
-           assoc-in
-           [:key :pos]
-           default-key-pos)
+           [:level :door-locked?]
+           false)
     (swap! app-state
            assoc-in
            [:level :exit-transition]
            (js/millis)))
-  (when (not (-> @app-state
-                 :level
-                 :player-exit?))
+  (when (-> @app-state
+            :level
+            :door-locked?)
     (draw-key (-> @app-state
                   :key
                   :pos))
@@ -244,9 +247,9 @@
   (draw-tile-map)
   (when (player-key-collision?)
     (attach-key-to-player))
-  (when (-> @app-state
-            :level
-            :player-exit?)
+  (when (not (-> @app-state
+                 :level
+                 :door-locked?))
     (when (> (js/millis)
              (+ 1000
                 (-> @app-state
