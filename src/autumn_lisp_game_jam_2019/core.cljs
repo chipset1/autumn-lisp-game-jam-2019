@@ -200,7 +200,10 @@
 (defn draw []
   (js/background 50)
   (js/fill 0)
-  (player-movement)
+  (when (-> @app-state
+            :level
+            :door-locked?)
+    (player-movement))
   (js/translate (* -1
                    js/width
                    (js/floor (/ (-> @app-state
