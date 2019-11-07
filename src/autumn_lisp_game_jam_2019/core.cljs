@@ -182,7 +182,7 @@
   (swap! app-state
          assoc-in
          [:player :pos]
-         [256 256])
+         [(- 256 32) (- 256 32)])
   (swap! app-state
          assoc-in
          [:level :door-locked?]
