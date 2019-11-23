@@ -28,12 +28,22 @@
                [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
                ])
 
-(defonce app-state (atom {:player {:pos [256 256]}
+(defonce app-state (atom {:entities [{:pos [(- 256 32) (- 256 32)]
+                                      :dialog ["hey this is a game"
+                                               "go and find the key and exit"
+                                               "more text 1"
+                                               "more text 2"
+                                               "more text 3"
+                                               "more text 4"]
+                                      :type :character}]
+                          :player {:pos [256 256]
+                                   :state nil}
                           :key {:pos default-key-pos}
                           :exit {:pos default-exit-pos}
                           :level {:door-locked? true
                                   :exit-transition 0}
-                          :fantasy-tileset-image nil}))
+                          :fantasy-tileset-image nil
+                          :dialog-index 0}))
 
 (defn draw-wall-tile [x y]
   (js/image (:fantasy-tileset-image @app-state)
@@ -87,6 +97,17 @@
             player-size
             32
             (* 20 32)
+            32
+            32))
+
+(defn draw-character [[x y]]
+  (js/image (:fantasy-tileset-image @app-state)
+            x
+            y
+            player-size
+            player-size
+            32
+            (* 18 32)
             32
             32))
 
@@ -188,6 +209,10 @@
          [:level :door-locked?]
          true))
 
+(defn characters []
+  (filter #(= (:type %) :character)
+          (:entities @app-state)))
+
 (defn setup []
   (js/createCanvas 512 512)
   (js/noSmooth)
@@ -200,9 +225,13 @@
 (defn draw []
   (js/background 50)
   (js/fill 0)
-  (when (-> @app-state
-            :level
-            :door-locked?)
+  (when (and (not= :talking
+                   (-> @app-state
+                       :player
+                       :state))
+             (-> @app-state
+                 :level
+                 :door-locked?))
     (player-movement))
   (js/translate (* -1
                    js/width
@@ -247,6 +276,46 @@
   (draw-player (-> @app-state
                    :player
                    :pos))
+  (doall (map (fn [character]
+                (js/stroke 0 255 0)
+                (js/fill 0 255 0)
+                (when (and (not= :talking
+                                 (-> @app-state
+                                     :player
+                                     :state))
+                           (aabb? (-> @app-state
+                                      :player
+                                      :pos)
+                                  tile-size
+                                  (:pos character)
+                                  tile-size))
+                  (js/text "press f to talk..."
+                           (v/x (:pos character))
+                           (+ (v/y (:pos character))
+                              74)))
+                (when (= :talking
+                         (-> @app-state
+                             :player
+                             :state))
+                  (if (>= (:dialog-index @app-state)
+                          (count (:dialog character)))
+                    (do (swap! app-state
+                               assoc-in
+                               [:player :state]
+                               :not-talking)
+                        (swap! app-state
+                               assoc
+                               :dialog-index
+                               0))
+                    (js/text (nth (:dialog character)
+                                  (:dialog-index @app-state))
+                             (v/x (:pos character))
+                             (+ (v/y (:pos character))
+                                74)))))
+              (characters)))
+
+  (doall (map #(draw-character (:pos %))
+              (characters)))
   (draw-tile-map)
   (when (player-key-collision?)
     (attach-key-to-player))
@@ -272,9 +341,33 @@
     (js/rect (* 512 2) 0 js/width js/height))
   )
 
+(defn key-pressed []
+  (when (= js/key "f")
+    (when (and (= :talking
+                  (-> @app-state
+                      :player
+                      :state)))
+      (swap! app-state
+             update
+             :dialog-index
+             inc))
+    (doall (map (fn [character]
+                  (when (and (aabb? (-> @app-state
+                                        :player
+                                        :pos)
+                                    tile-size
+                                    (:pos character)
+                                    tile-size))
+                    (swap! app-state
+                           assoc-in
+                           [:player :state]
+                           :talking)))
+                (characters)))))
+
 (doto js/window
   (aset "setup" setup)
-  (aset "draw" draw))
+  (aset "draw" draw)
+  (aset "keyPressed" key-pressed))
 
 (defn on-js-reload []
   ;; optionally touch your app-state to force rerendering depending on
