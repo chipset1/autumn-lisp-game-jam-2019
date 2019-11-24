@@ -331,16 +331,16 @@
                    :pos))
 
 
-  (draw-sword (-> @app-state
-                  :player
-                  :pos)
-              (sword-angle (-> @app-state
-                               :player
-                               :direction)))
   (when (= :attacking
            (-> @app-state
                :player
                :state))
+    (draw-sword (-> @app-state
+                    :player
+                    :pos)
+                (sword-angle (-> @app-state
+                                 :player
+                                 :direction)))
     (swap! app-state
            assoc-in
            [:player :sword :angle]
