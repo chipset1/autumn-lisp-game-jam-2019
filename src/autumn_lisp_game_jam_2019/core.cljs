@@ -39,6 +39,7 @@
                                      {:pos [(+ 256 512) (+ 256 512)]
                                       :type :enemy}]
                           :player {:pos [256 256]
+                                   :direction [0 0]
                                    :sword {:angle 0
                                            :swing-time 100
                                            :swing-start 0}
@@ -163,6 +164,10 @@
 
 (defn move-player [vel-direction]
   (swap! app-state
+         assoc-in
+         [:player :direction]
+         vel-direction)
+  (swap! app-state
          update-in
          [:player :pos]
          new-player-position
@@ -244,6 +249,19 @@
          [:player :sword :swing-start]
          (js/millis)))
 
+(defn sword-angle [[x-dir y-dir]]
+  (let [base-angle (+ (+ (/ js/PI 4) (/ js/PI 2))
+                      (-> @app-state
+                          :player
+                          :sword
+                          :angle))]
+    (cond (= y-dir 1) base-angle
+          (= y-dir -1) (+ js/PI base-angle)
+          (= x-dir 1) (+ js/PI (/ js/PI 2) base-angle)
+          (= x-dir -1) (+ (/ js/PI 2) base-angle)
+          :default base-angle)
+    ))
+
 (defn setup []
   (js/createCanvas 512 512)
   (js/noSmooth)
@@ -267,6 +285,7 @@
   (js/stroke 0 255 0)
   (js/fill 0 255 0)
   (js/text (int (js/frameRate)) 150 150)
+  (js/text (:direction (:player @app-state)) 150 160)
   (js/translate (* -1
                    js/width
                    (js/floor (/ (-> @app-state
@@ -315,11 +334,9 @@
   (draw-sword (-> @app-state
                   :player
                   :pos)
-              (+ (+ (/ js/PI 4) (/ js/PI 2))
-                 (-> @app-state
-                     :player
-                     :sword
-                     :angle)))
+              (sword-angle (-> @app-state
+                               :player
+                               :direction)))
   (when (= :attacking
            (-> @app-state
                :player
