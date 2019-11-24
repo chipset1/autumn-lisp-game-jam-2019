@@ -35,8 +35,13 @@
                                                "more text 2"
                                                "more text 3"
                                                "more text 4"]
-                                      :type :character}]
+                                      :type :character}
+                                     {:pos [(+ 256 512) (+ 256 512)]
+                                      :type :enemy}]
                           :player {:pos [256 256]
+                                   :sword {:angle 0
+                                           :swing-time 100
+                                           :swing-start 0}
                                    :state nil}
                           :key {:pos default-key-pos}
                           :exit {:pos default-exit-pos}
@@ -104,12 +109,28 @@
   (js/image (:fantasy-tileset-image @app-state)
             x
             y
-            player-size
-            player-size
+            tile-size
+            tile-size
             32
             (* 18 32)
             32
             32))
+
+(defn draw-sword [[x y] angle]
+  (js/push)
+  (js/translate (+ x 32) (+ y 32))
+  (js/rotate angle)
+  (js/translate (- tile-size) (- tile-size))
+  (js/image (:fantasy-tileset-image @app-state)
+            0
+            0
+            tile-size
+            tile-size
+            64
+            (* 7 32)
+            32
+            32)
+  (js/pop))
 
 (defn draw-tile-map []
   (doall (map-indexed (fn [i row]
@@ -213,6 +234,16 @@
   (filter #(= (:type %) :character)
           (:entities @app-state)))
 
+(defn start-sword-swing []
+  (swap! app-state
+         assoc-in
+         [:player :state]
+         :attacking)
+  (swap! app-state
+         assoc-in
+         [:player :sword :swing-start]
+         (js/millis)))
+
 (defn setup []
   (js/createCanvas 512 512)
   (js/noSmooth)
@@ -233,6 +264,9 @@
                  :level
                  :door-locked?))
     (player-movement))
+  (js/stroke 0 255 0)
+  (js/fill 0 255 0)
+  (js/text (int (js/frameRate)) 150 150)
   (js/translate (* -1
                    js/width
                    (js/floor (/ (-> @app-state
@@ -276,6 +310,55 @@
   (draw-player (-> @app-state
                    :player
                    :pos))
+
+
+  (draw-sword (-> @app-state
+                  :player
+                  :pos)
+              (+ (+ (/ js/PI 4) (/ js/PI 2))
+                 (-> @app-state
+                     :player
+                     :sword
+                     :angle)))
+  (when (= :attacking
+           (-> @app-state
+               :player
+               :state))
+    (swap! app-state
+           assoc-in
+           [:player :sword :angle]
+           (js/map (js/millis)
+                   (-> @app-state
+                       :player
+                       :sword
+                       :swing-start)
+                   (+ (-> @app-state
+                          :player
+                          :sword
+                          :swing-time)
+                      (-> @app-state
+                          :player
+                          :sword
+                          :swing-start))
+                   0
+                   js/PI)))
+  (when (> (js/millis)
+           (+ (-> @app-state
+                  :player
+                  :sword
+                  :swing-time)
+              (-> @app-state
+                  :player
+                  :sword
+                  :swing-start)))
+    (swap! app-state
+           assoc-in
+           [:player :sword :angle]
+           0)
+    (swap! app-state
+           assoc-in
+           [:player :state]
+           :not-attacking))
   (doall (map (fn [character]
                 (js/stroke 0 255 0)
                 (js/fill 0 255 0)
@@ -289,7 +372,7 @@
                                   tile-size
                                   (:pos character)
                                   tile-size))
-                  (js/text "press f to talk..."
+                  (js/text "press j to talk..."
                            (v/x (:pos character))
                            (+ (v/y (:pos character))
                               74)))
@@ -314,6 +397,9 @@
                                 74)))))
               (characters)))
 
+  (doall (map #(draw-character (:pos %))
+              (filter #(= :enemy (:type %))
+                      (:entities @app-state))))
   (doall (map #(draw-character (:pos %))
               (characters)))
   (draw-tile-map)
@@ -342,11 +428,14 @@
   )
 
 (defn key-pressed []
-  (when (= js/key "f")
-    (when (and (= :talking
-                  (-> @app-state
-                      :player
-                      :state)))
+  (when (= js/key "k")
+    (start-sword-swing))
+
+  (when (= js/key "j")
+    (when (= :talking
+             (-> @app-state
+                 :player
+                 :state))
       (swap! app-state
              update
              :dialog-index
