@@ -46,7 +46,7 @@
                                      :type :enemy}]
                           :bullets []
                           :bullet-last-time 0
-                          :bullet-time 200
+                          :bullet-period 200
                           :player {:pos [256 256]
                                    :direction [0 0]
                                    :sword {:angle 0
@@ -347,7 +347,7 @@
 (defn shoot []
   (when (> (- (js/millis)
               (:bullet-last-time @app-state))
-           (:bullet-time @app-state))
+           (:bullet-period @app-state))
     (swap! app-state assoc :bullet-last-time (js/millis))
     (cond (js/keyIsDown js/UP_ARROW) (shoot-direction [0 -1])
           (js/keyIsDown js/DOWN_ARROW) (shoot-direction [0 1])
