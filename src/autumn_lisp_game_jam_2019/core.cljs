@@ -12,20 +12,22 @@
 (def default-exit-pos [(- (+ 256 512 512) 32) (- 256 32)])
 
 (def tile-map [[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
-               [1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1]
+               [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
+               [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
                [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1]
                [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1]
-               [1 1 1 1 1 1 1 1 1 1 1 0 0 1 1 1 1 1 1 1 1 1 1 1]
-               [1 1 1 1 1 1 1 1 1 1 1 0 0 1 1 1 1 1 1 1 1 1 1 1]
-               [1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1]
+               [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1]
+               [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
+               [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
+               [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 1 1 1 1 1]
+               [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 1 1 1 1 1]
+               [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
+               [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
+               [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1]
+               [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1]
+               [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1]
+               [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
+               [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
                [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
                ])
 
@@ -43,6 +45,8 @@
                                     {:pos [(+ 256 64 512) (+ 256 512)]
                                      :type :enemy}]
                           :bullets []
+                          :bullet-last-time 0
+                          :bullet-time 200
                           :player {:pos [256 256]
                                    :direction [0 0]
                                    :sword {:angle 0
@@ -182,17 +186,13 @@
          (v/mult player-speed vel-direction)))
 
 (defn player-movement []
-  (when (or (js/keyIsDown 87)
-            (js/keyIsDown js/UP_ARROW))
+  (when (js/keyIsDown 87)
     (move-player [0 -1]))
-  (when (or (js/keyIsDown 83)
-            (js/keyIsDown js/DOWN_ARROW))
+  (when (js/keyIsDown 83)
     (move-player [0 1]))
-  (when (or (js/keyIsDown 65)
-            (js/keyIsDown js/LEFT_ARROW))
+  (when (js/keyIsDown 65)
     (move-player [-1 0]))
-  (when (or (js/keyIsDown 68)
-            (js/keyIsDown js/RIGHT_ARROW))
+  (when (js/keyIsDown 68)
     (move-player [1 0])))
 
 (defn aabb? [[x1 y1] size1 [x2 y2] size2]
@@ -334,7 +334,7 @@
            [:player :state]
            :not-attacking)))
 
-(defn shoot []
+(defn shoot-direction [dir]
   (swap! app-state
          update
          :bullets
@@ -342,9 +342,17 @@
          {:pos (-> @app-state
                    :player
                    :pos)
-          :direction (-> @app-state
-                         :player
-                         :direction)}))
+          :direction dir}))
+
+(defn shoot []
+  (when (> (- (js/millis)
+              (:bullet-last-time @app-state))
+           (:bullet-time @app-state))
+    (swap! app-state assoc :bullet-last-time (js/millis))
+    (cond (js/keyIsDown js/UP_ARROW) (shoot-direction [0 -1])
+          (js/keyIsDown js/DOWN_ARROW) (shoot-direction [0 1])
+          (js/keyIsDown js/LEFT_ARROW) (shoot-direction [-1 0])
+          (js/keyIsDown js/RIGHT_ARROW) (shoot-direction [1 0]))))
 
 (defn bullet-hit-enemy? [b]
   (some (fn [e]
@@ -382,7 +390,8 @@
               (:bullets @app-state))))
 
 (defn setup []
-  (js/createCanvas 512 512)
+   ;256 	× 	192
+  (js/createCanvas (* 1.5 512) (* 1.5 384))
   (js/noSmooth)
   (swap! app-state
          assoc
@@ -432,6 +441,7 @@
                                     v/y)
                                 js/height))))
 
+  (shoot)
   (draw-stairs (-> @app-state
                    :exit
                    :pos))
@@ -543,9 +553,6 @@
   )
 
 (defn key-pressed []
-  (when (= js/key "k")
-    (shoot)
-    (start-sword-swing))
 
   (when (= js/key "j")
     (when (= :talking
