@@ -170,9 +170,29 @@
                                             row)))
                       (:tile-map @app-state))))
 
+(defn player-room-min
+  "min room bounds that player is in.
+  eg: in the starting room this is 0,0.
+      one over to the right its width, 0"
+  []
+  [(* js/width
+      (js/floor (/ (-> @app-state
+                       :player
+                       :pos
+                       v/x)
+                   js/width)))
+   (* js/height
+      (js/floor (/ (-> @app-state
+                       :player
+                       :pos
+                       v/y)
+                   js/height)))])
+
 (defn solid-tile? [x y]
-  (let [col (js/floor (/ x tile-size))
-        row (js/floor (/ y tile-size))]
+  (let [col (js/floor (/ (- x (v/x (player-room-min)))
+                         tile-size))
+        row (js/floor (/ (- y (v/y (player-room-min)))
+                         tile-size))]
     (= 1 (get-in (:tile-map @app-state) [row col]))))
 
 (defn tile-map-collision? [pos size]
@@ -506,6 +526,7 @@
     (when (< 0.5 (js/random)) (add-door-right))
     (when (< 0.5 (js/random)) (add-door-top))))
 
+
 (defn setup []
    ;256 	× 	192
   (js/createCanvas (* 1.5 512) (* 1.5 384))
@@ -548,20 +569,8 @@
                            :pos
                            v/y)
                        256))))
-  (js/translate (* -1
-                   js/width
-                   (js/floor (/ (-> @app-state
-                                    :player
-                                    :pos
-                                    v/x)
-                                js/width)))
-                (* -1
-                   js/height
-                   (js/floor (/ (-> @app-state
-                                    :player
-                                    :pos
-                                    v/y)
-                                js/height))))
+  (js/translate (- (v/x (player-room-min)))
+                (- (v/y (player-room-min))))
 
   (shoot)
   (draw-stairs (-> @app-state
@@ -650,18 +659,8 @@
   (doall (map #(draw-character (:pos %))
               (:characters @app-state)))
   (spawn-room)
-  (draw-tile-map (* js/width
-                    (js/floor (/ (-> @app-state
-                                     :player
-                                     :pos
-                                     v/x)
-                                 js/width)))
-                 (* js/height
-                    (js/floor (/ (-> @app-state
-                                     :player
-                                     :pos
-                                     v/y)
-                                 js/height))))
+  (draw-tile-map (v/x (player-room-min))
+                 (v/y (player-room-min)))
   (when (player-key-collision?)
     (attach-key-to-player))
   (when (not (-> @app-state
