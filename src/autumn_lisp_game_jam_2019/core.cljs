@@ -3,6 +3,8 @@
 
 (enable-console-print!)
 
+(def width (* 1.5 512))
+(def height (* 1.5 384))
 (def player-speed 5)
 (def player-size 64)
 (def bullet-size 10)
@@ -31,6 +33,17 @@
                [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
                ])
 
+(def default-room [[1 1 1 1 1 1 1 1 1 1 1 1]
+                   [1 0 0 0 0 0 0 0 0 0 0 1]
+                   [1 0 0 0 0 0 0 0 0 0 0 1]
+                   [1 0 0 0 0 0 0 0 0 0 0 1]
+                   [1 0 0 0 0 0 0 0 0 0 0 1]
+                   [1 0 0 0 0 0 0 0 0 0 0 1]
+                   [1 0 0 0 0 0 0 0 0 0 0 1]
+                   [1 0 0 0 0 0 0 0 0 0 0 1]
+                   [1 1 1 1 1 1 1 1 1 1 1 1]
+                   ])
+
 (defonce app-state (atom {:characters [{:pos [(- 256 32) (- 256 32)]
                                         :dialog ["hey this is a game"
                                                  "go and find the key and exit"
@@ -44,9 +57,13 @@
                                      :type :enemy}
                                     {:pos [(+ 256 64 512) (+ 256 512)]
                                      :type :enemy}]
+                          :tile-map default-room
+                          :tile-map-top default-room
+                          :bounds-x width ;boundary x when to change to new room
+                          :bounds-y height
                           :bullets []
                           :bullet-last-time 0
-                          :bullet-period 200
+                          :bullet-interval 200
                           :player {:pos [256 256]
                                    :direction [0 0]
                                    :sword {:angle 0
@@ -145,18 +162,18 @@
 
 
 
-(defn draw-tile-map []
+(defn draw-tile-map [offset-x offset-y]
   (doall (map-indexed (fn [i row]
                         (doall (map-indexed (fn [j tile]
                                               (when (= tile 1)
-                                                (draw-wall-tile (* j tile-size) (* i tile-size))))
+                                                (draw-wall-tile (+ offset-x (* j tile-size)) (+ offset-y (* i tile-size)))))
                                             row)))
-                      tile-map)))
+                      (:tile-map @app-state))))
 
 (defn solid-tile? [x y]
   (let [col (js/floor (/ x tile-size))
         row (js/floor (/ y tile-size))]
-    (= 1 (get-in tile-map [row col]))))
+    (= 1 (get-in (:tile-map @app-state) [row col]))))
 
 (defn tile-map-collision? [pos size]
   (let [left (v/x pos)
@@ -347,7 +364,7 @@
 (defn shoot []
   (when (> (- (js/millis)
               (:bullet-last-time @app-state))
-           (:bullet-period @app-state))
+           (:bullet-interval @app-state))
     (swap! app-state assoc :bullet-last-time (js/millis))
     (cond (js/keyIsDown js/UP_ARROW) (shoot-direction [0 -1])
           (js/keyIsDown js/DOWN_ARROW) (shoot-direction [0 1])
@@ -389,6 +406,106 @@
                          bullet-size))
               (:bullets @app-state))))
 
+(defn add-door-right []
+  (swap! app-state
+         assoc-in
+         [:tile-map 3 11]
+         0)
+  (swap! app-state
+         assoc-in
+         [:tile-map 4 11]
+         0)
+  (swap! app-state
+         assoc-in
+         [:tile-map 5 11]
+         0)
+  )
+
+(defn add-door-left []
+  (swap! app-state
+         assoc-in
+         [:tile-map 3 0]
+         0)
+  (swap! app-state
+         assoc-in
+         [:tile-map 4 0]
+         0)
+  (swap! app-state
+         assoc-in
+         [:tile-map 5 0]
+         0)
+  )
+
+(defn add-door-top []
+  (swap! app-state
+         assoc-in
+         [:tile-map 0 5]
+         0)
+  (swap! app-state
+         assoc-in
+         [:tile-map 0 6]
+         0)
+  )
+
+(defn add-door-bottom []
+  (swap! app-state
+         assoc-in
+         [:tile-map 8 5]
+         0)
+  (swap! app-state
+         assoc-in
+         [:tile-map 8 6]
+         0)
+  )
+
+(defn spawn-room
+  "update bounds, reset tile-map to default room, create door where entered, randomly create other doors"
+  []
+  (when (> (-> @app-state
+               :player
+               :pos
+               v/x)
+           (:bounds-x @app-state))
+    (swap! app-state assoc :bounds-x (+ width (:bounds-x @app-state)))
+    (swap! app-state assoc :tile-map default-room)
+    (add-door-left)
+    (when (< 0.5 (js/random)) (add-door-right))
+    (when (< 0.5 (js/random)) (add-door-top))
+    (when (< 0.5 (js/random)) (add-door-bottom)))
+  (when (< (-> @app-state
+               :player
+               :pos
+               v/x)
+           (- (:bounds-x @app-state) width))
+    (swap! app-state assoc :bounds-x (- (:bounds-x @app-state) width))
+    (swap! app-state assoc :tile-map default-room)
+    (add-door-right)
+    (when (< 0.5 (js/random)) (add-door-left))
+    (when (< 0.5 (js/random)) (add-door-top))
+    (when (< 0.5 (js/random)) (add-door-bottom)))
+  (when (> (-> @app-state
+               :player
+               :pos
+               v/y)
+           (:bounds-y @app-state))
+    (swap! app-state assoc :bounds-y (+ height (:bounds-y @app-state)))
+    (swap! app-state assoc :tile-map default-room)
+    (add-door-top)
+    (when (< 0.5 (js/random)) (add-door-left))
+    (when (< 0.5 (js/random)) (add-door-right))
+    (when (< 0.5 (js/random)) (add-door-bottom)))
+  (when (< (-> @app-state
+               :player
+               :pos
+               v/y)
+           (- (:bounds-y @app-state) height))
+    (swap! app-state assoc :bounds-y (- (:bounds-y @app-state) height))
+    (swap! app-state assoc :tile-map default-room)
+    (add-door-bottom)
+    (when (< 0.5 (js/random)) (add-door-left))
+    (when (< 0.5 (js/random)) (add-door-right))
+    (when (< 0.5 (js/random)) (add-door-top))))
+
 (defn setup []
    ;256 	× 	192
   (js/createCanvas (* 1.5 512) (* 1.5 384))
@@ -396,7 +513,11 @@
   (swap! app-state
          assoc
          :fantasy-tileset-image
-         (js/loadImage "/assets/fantasy-tileset.png")))
+         (js/loadImage "/assets/fantasy-tileset.png"))
+  (add-door-right)
+  (add-door-left)
+  (add-door-top)
+  (add-door-bottom))
 
 (defn draw []
   (js/background 50)
@@ -412,8 +533,9 @@
   (js/stroke 0 255 0)
   (js/fill 0 255 0)
   (js/text (int (js/frameRate)) 150 150)
-  (js/text (:direction (:player @app-state)) 150 160)
-  (js/text (:bullets @app-state) 150 170)
+  (js/text (:bounds-x @app-state) 150 160)
+  (js/text (:bounds-y @app-state) 150 170)
+  (js/text (:bullets @app-state) 150 180)
   #_(js/translate (- (+ 32
                       (- (-> @app-state
                            :player
@@ -527,7 +649,19 @@
               (:enemies @app-state)))
   (doall (map #(draw-character (:pos %))
               (:characters @app-state)))
-  (draw-tile-map)
+  (spawn-room)
+  (draw-tile-map (* js/width
+                    (js/floor (/ (-> @app-state
+                                     :player
+                                     :pos
+                                     v/x)
+                                 js/width)))
+                 (* js/height
+                    (js/floor (/ (-> @app-state
+                                     :player
+                                     :pos
+                                     v/y)
+                                 js/height))))
   (when (player-key-collision?)
     (attach-key-to-player))
   (when (not (-> @app-state
@@ -580,6 +714,7 @@
   (aset "setup" setup)
   (aset "draw" draw)
   (aset "keyPressed" key-pressed))
+
 
 (defn on-js-reload []
   ;; optionally touch your app-state to force rerendering depending on
