@@ -570,9 +570,11 @@
                            :pos
                            v/y)
                        256))))
-  (js/translate (- (v/x (player-room-min)))
+  #_(js/translate (- (v/x (player-room-min)))
                 (- (v/y (player-room-min))))
-
+  (spawn-room)
+  (js/translate (- (- (:bounds-x @app-state) width))
+                (- (- (:bounds-y @app-state) height)))
   (shoot)
   (draw-stairs (-> @app-state
                    :exit
@@ -659,7 +661,7 @@
               (:enemies @app-state)))
   (doall (map #(draw-character (:pos %))
               (:characters @app-state)))
-  (spawn-room)
+
   (draw-tile-map (- (:bounds-x @app-state) width)
                  (- (:bounds-y @app-state) height))
   (when (player-key-collision?)
