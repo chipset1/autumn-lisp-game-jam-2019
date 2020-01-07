@@ -189,9 +189,9 @@
                    js/height)))])
 
 (defn solid-tile? [x y]
-  (let [col (js/floor (/ (- x (v/x (player-room-min)))
+  (let [col (js/floor (/ (- x (- (:bounds-x @app-state) width))
                          tile-size))
-        row (js/floor (/ (- y (v/y (player-room-min)))
+        row (js/floor (/ (- y (- (:bounds-y @app-state) height))
                          tile-size))]
     (= 1 (get-in (:tile-map @app-state) [row col]))))
 
@@ -659,8 +659,8 @@
   (doall (map #(draw-character (:pos %))
               (:characters @app-state)))
   (spawn-room)
-  (draw-tile-map (v/x (player-room-min))
-                 (v/y (player-room-min)))
+  (draw-tile-map (- (:bounds-x @app-state) width)
+                 (- (:bounds-y @app-state) height))
   (when (player-key-collision?)
     (attach-key-to-player))
   (when (not (-> @app-state
