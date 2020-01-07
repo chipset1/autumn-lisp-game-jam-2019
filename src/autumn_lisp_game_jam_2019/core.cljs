@@ -9,6 +9,7 @@
 (def player-size 64)
 (def bullet-size 10)
 (def tile-size 64)
+(def door-spawn-chance 0.5)
 (def default-key-pos [(- (+ 256 512 512) 32)
                       (- (+ 256 512) 32)])
 (def default-exit-pos [(- (+ 256 512 512) 32) (- 256 32)])
@@ -489,9 +490,9 @@
     (swap! app-state assoc :bounds-x (+ width (:bounds-x @app-state)))
     (swap! app-state assoc :tile-map default-room)
     (add-door-left)
-    (when (< 0.5 (js/random)) (add-door-right))
-    (when (< 0.5 (js/random)) (add-door-top))
-    (when (< 0.5 (js/random)) (add-door-bottom)))
+    (when (< door-spawn-chance (js/random)) (add-door-right))
+    (when (< door-spawn-chance (js/random)) (add-door-top))
+    (when (< door-spawn-chance (js/random)) (add-door-bottom)))
   (when (< (-> @app-state
                :player
                :pos
@@ -500,9 +501,9 @@
     (swap! app-state assoc :bounds-x (- (:bounds-x @app-state) width))
     (swap! app-state assoc :tile-map default-room)
     (add-door-right)
-    (when (< 0.5 (js/random)) (add-door-left))
-    (when (< 0.5 (js/random)) (add-door-top))
-    (when (< 0.5 (js/random)) (add-door-bottom)))
+    (when (< door-spawn-chance (js/random)) (add-door-left))
+    (when (< door-spawn-chance (js/random)) (add-door-top))
+    (when (< door-spawn-chance (js/random)) (add-door-bottom)))
   (when (> (-> @app-state
                :player
                :pos
@@ -511,9 +512,9 @@
     (swap! app-state assoc :bounds-y (+ height (:bounds-y @app-state)))
     (swap! app-state assoc :tile-map default-room)
     (add-door-top)
-    (when (< 0.5 (js/random)) (add-door-left))
-    (when (< 0.5 (js/random)) (add-door-right))
-    (when (< 0.5 (js/random)) (add-door-bottom)))
+    (when (< door-spawn-chance (js/random)) (add-door-left))
+    (when (< door-spawn-chance (js/random)) (add-door-right))
+    (when (< door-spawn-chance (js/random)) (add-door-bottom)))
   (when (< (-> @app-state
                :player
                :pos
@@ -522,14 +523,14 @@
     (swap! app-state assoc :bounds-y (- (:bounds-y @app-state) height))
     (swap! app-state assoc :tile-map default-room)
     (add-door-bottom)
-    (when (< 0.5 (js/random)) (add-door-left))
-    (when (< 0.5 (js/random)) (add-door-right))
-    (when (< 0.5 (js/random)) (add-door-top))))
+    (when (< door-spawn-chance (js/random)) (add-door-left))
+    (when (< door-spawn-chance (js/random)) (add-door-right))
+    (when (< door-spawn-chance (js/random)) (add-door-top))))
 
 
 (defn setup []
    ;256 	× 	192
-  (js/createCanvas (* 1.5 512) (* 1.5 384))
+  (js/createCanvas width height)
   (js/noSmooth)
   (swap! app-state
          assoc
