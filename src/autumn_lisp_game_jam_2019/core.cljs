@@ -493,10 +493,11 @@
     (when (< door-spawn-chance (js/random)) (add-door-right))
     (when (< door-spawn-chance (js/random)) (add-door-top))
     (when (< door-spawn-chance (js/random)) (add-door-bottom)))
-  (when (< (-> @app-state
-               :player
-               :pos
-               v/x)
+  (when (< (+ (-> @app-state
+                  :player
+                  :pos
+                  v/x)
+              64)
            (- (:bounds-x @app-state) width))
     (swap! app-state assoc :bounds-x (- (:bounds-x @app-state) width))
     (swap! app-state assoc :tile-map default-room)
@@ -515,10 +516,11 @@
     (when (< door-spawn-chance (js/random)) (add-door-left))
     (when (< door-spawn-chance (js/random)) (add-door-right))
     (when (< door-spawn-chance (js/random)) (add-door-bottom)))
-  (when (< (-> @app-state
-               :player
-               :pos
-               v/y)
+  (when (< (+ (-> @app-state
+                  :player
+                  :pos
+                  v/y)
+              64)
            (- (:bounds-y @app-state) height))
     (swap! app-state assoc :bounds-y (- (:bounds-y @app-state) height))
     (swap! app-state assoc :tile-map default-room)
