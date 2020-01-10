@@ -59,7 +59,13 @@
                                     {:pos [(+ 256 64 512) (+ 256 512)]
                                      :type :enemy}]
                           :tile-map default-room
-                          :tile-map-top default-room
+                          :tile-map-previous default-room
+                          :scroll-start-time 0
+                          :scroll-interval 200
+                          :scroll-target-min-x 0
+                          :scroll-target-min-y 0
+                          :scroll-x 0
+                          :scroll-y 0
                           :bounds-x width ;boundary x when to change to new room
                           :bounds-y height
                           :bullets []
@@ -163,26 +169,26 @@
 
 
 
-(defn draw-tile-map [offset-x offset-y]
+(defn draw-tile-map [tile-map-key offset-x offset-y]
   (doall (map-indexed (fn [i row]
                         (doall (map-indexed (fn [j tile]
                                               (when (= tile 1)
                                                 (draw-wall-tile (+ offset-x (* j tile-size)) (+ offset-y (* i tile-size)))))
                                             row)))
-                      (:tile-map @app-state))))
+                      (tile-map-key @app-state))))
 
 (defn player-room-min
   "min room bounds that player is in.
   eg: in the starting room this is 0,0.
       one over to the right its width, 0"
   []
-  [(* js/width
+  [(* width
       (js/floor (/ (-> @app-state
                        :player
                        :pos
                        v/x)
                    js/width)))
-   (* js/height
+   (* height
       (js/floor (/ (-> @app-state
                        :player
                        :pos
@@ -479,6 +485,87 @@
          0)
   )
 
+(defn shift-left []
+  (swap! app-state
+         assoc-in
+         [:player :state]
+         :scrolling-x)
+  (swap! app-state assoc :scroll-target-min-y 0)
+  (swap! app-state assoc :scroll-target-min-x width)
+  ;; (swap! app-state assoc :scroll-x (- width))
+  (swap! app-state assoc :scroll-start-time (js/millis))
+  )
+
+(defn shift-right []
+  (swap! app-state
+         assoc-in
+         [:player :state]
+         :scrolling-x)
+  (swap! app-state assoc :scroll-target-min-y 0)
+  (swap! app-state assoc :scroll-target-min-x (- width))
+  ;; (swap! app-state assoc :scroll-x (- width))
+  (swap! app-state assoc :scroll-start-time (js/millis))
+  )
+
+(defn shift-up []
+  (swap! app-state
+         assoc-in
+         [:player :state]
+         :scrolling-y)
+  (swap! app-state assoc :scroll-target-min-x 0)
+  (swap! app-state assoc :scroll-target-min-y height)
+  ;; (swap! app-state assoc :scroll-x (- width))
+  (swap! app-state assoc :scroll-start-time (js/millis))
+  )
+
+(defn shift-down []
+  (swap! app-state
+         assoc-in
+         [:player :state]
+         :scrolling-y)
+  (swap! app-state assoc :scroll-target-min-x 0)
+  (swap! app-state assoc :scroll-target-min-y (- height))
+  ;; (swap! app-state assoc :scroll-x (- width))
+  (swap! app-state assoc :scroll-start-time (js/millis))
+  )
+
+(defn scroll-to-next-room []
+  (when (= :scrolling-y
+           (-> @app-state
+               :player
+               :state))
+    (swap! app-state
+           assoc
+           :scroll-y
+           (js/map (js/millis)
+                   (:scroll-start-time @app-state)
+                   (+ (:scroll-start-time @app-state)
+                      (:scroll-interval @app-state))
+                   (:scroll-target-min-y @app-state)
+                   0)))
+  (when (= :scrolling-x
+           (-> @app-state
+               :player
+               :state))
+    (swap! app-state
+           assoc
+           :scroll-x
+           (js/map (js/millis)
+                   (:scroll-start-time @app-state)
+                   (+ (:scroll-start-time @app-state)
+                      (:scroll-interval @app-state))
+                   (:scroll-target-min-x @app-state)
+                   0)))
+  (when (> (js/millis)
+           (+ (:scroll-start-time @app-state)
+              (:scroll-interval @app-state)))
+    (swap! app-state assoc :scroll-x 0)
+    (swap! app-state assoc :scroll-y 0)
+    (swap! app-state
+           assoc-in
+           [:player :state]
+           :not-scrolling)))
+
 (defn spawn-room
   "update bounds, reset tile-map to default room, create door where entered, randomly create other doors"
   []
@@ -488,8 +575,10 @@
                v/x)
            (:bounds-x @app-state))
     (swap! app-state assoc :bounds-x (+ width (:bounds-x @app-state)))
+    (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
     (swap! app-state assoc :tile-map default-room)
     (add-door-left)
+    (shift-left)
     (when (< door-spawn-chance (js/random)) (add-door-right))
     (when (< door-spawn-chance (js/random)) (add-door-top))
     (when (< door-spawn-chance (js/random)) (add-door-bottom)))
@@ -500,8 +589,10 @@
               64)
            (- (:bounds-x @app-state) width))
     (swap! app-state assoc :bounds-x (- (:bounds-x @app-state) width))
+    (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
     (swap! app-state assoc :tile-map default-room)
     (add-door-right)
+    (shift-right)
     (when (< door-spawn-chance (js/random)) (add-door-left))
     (when (< door-spawn-chance (js/random)) (add-door-top))
     (when (< door-spawn-chance (js/random)) (add-door-bottom)))
@@ -511,8 +602,10 @@
                v/y)
            (:bounds-y @app-state))
     (swap! app-state assoc :bounds-y (+ height (:bounds-y @app-state)))
+    (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
     (swap! app-state assoc :tile-map default-room)
     (add-door-top)
+    (shift-up)
     (when (< door-spawn-chance (js/random)) (add-door-left))
     (when (< door-spawn-chance (js/random)) (add-door-right))
     (when (< door-spawn-chance (js/random)) (add-door-bottom)))
@@ -523,8 +616,10 @@
               64)
            (- (:bounds-y @app-state) height))
     (swap! app-state assoc :bounds-y (- (:bounds-y @app-state) height))
+    (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
     (swap! app-state assoc :tile-map default-room)
     (add-door-bottom)
+    (shift-down)
     (when (< door-spawn-chance (js/random)) (add-door-left))
     (when (< door-spawn-chance (js/random)) (add-door-right))
     (when (< door-spawn-chance (js/random)) (add-door-top))))
@@ -541,7 +636,8 @@
   (add-door-right)
   (add-door-left)
   (add-door-top)
-  (add-door-bottom))
+  (add-door-bottom)
+  (swap! app-state assoc :tile-map-previous (:tile-map @app-state)))
 
 (defn draw []
   (js/background 50)
@@ -559,7 +655,14 @@
   (js/text (int (js/frameRate)) 150 150)
   (js/text (:bounds-x @app-state) 150 160)
   (js/text (:bounds-y @app-state) 150 170)
-  (js/text (:bullets @app-state) 150 180)
+  (js/text (str "pos: " (:pos (:player @app-state))) 150 180)
+  (js/text (:direction (:player @app-state)) 150 190)
+  (js/text (:scroll-target-min-x @app-state) 150 200)
+  (js/text (:scroll-target-min-y @app-state) 150 210)
+  ;; (js/text (:bullets @app-state) 150 200)
+  ;; (js/text (str "scroll-x " (:scroll-x @app-state)) 150 200)
+  ;; (js/text (str "scroll-y " (:scroll-y @app-state)) 150 210)
+
   #_(js/translate (- (+ 32
                       (- (-> @app-state
                            :player
@@ -575,7 +678,12 @@
   #_(js/translate (- (v/x (player-room-min)))
                 (- (v/y (player-room-min))))
   (spawn-room)
-  (js/translate (- (- (:bounds-x @app-state) width))
+  (scroll-to-next-room)
+  (js/translate (+ (:scroll-x @app-state)
+                   (- (- (:bounds-x @app-state) width)))
+                (+ (:scroll-y @app-state)
+                   (- (- (:bounds-y @app-state) height))))
+  #_(js/translate (- (- (:bounds-x @app-state) width))
                 (- (- (:bounds-y @app-state) height)))
   (shoot)
   (draw-stairs (-> @app-state
@@ -664,8 +772,15 @@
   (doall (map #(draw-character (:pos %))
               (:characters @app-state)))
 
-  (draw-tile-map (- (:bounds-x @app-state) width)
+  (draw-tile-map :tile-map
+                 (- (:bounds-x @app-state) width)
                  (- (:bounds-y @app-state) height))
+
+  (draw-tile-map :tile-map-previous
+                 (- (- (:bounds-x @app-state) width)
+                    (:scroll-target-min-x @app-state))
+                 (- (- (:bounds-y @app-state) height)
+                    (:scroll-target-min-y @app-state)))
   (when (player-key-collision?)
     (attach-key-to-player))
   (when (not (-> @app-state
