@@ -10,6 +10,7 @@
 (def bullet-size 10)
 (def tile-size 64)
 (def door-spawn-chance 0.5)
+(def enemy-spawn-chance 0.8)
 (def default-key-pos [(- (+ 256 512 512) 32)
                       (- (+ 256 512) 32)])
 (def default-exit-pos [(- (+ 256 512 512) 32) (- 256 32)])
@@ -58,7 +59,7 @@
                           :tile-map default-room
                           :tile-map-previous default-room
                           :scroll-start-time 0
-                          :scroll-interval 200
+                          :scroll-interval 250
                           :scroll-target-min-x 0
                           :scroll-target-min-y 0
                           :scroll-x 0
@@ -69,6 +70,7 @@
                           :bullet-last-time 0
                           :bullet-interval 200
                           :player {:pos [256 256]
+                                   :money 0 ; increase once enemy is killed
                                    :direction [0 0]
                                    :sword {:angle 0
                                            :swing-time 100
@@ -571,6 +573,71 @@
            [:player :state]
            :not-scrolling)))
 
+(defn create-enemy [pos]
+  {:pos pos
+   :health 5})
+
+(defn add-enemy!
+  "adds enemy at screen coordinates"
+  [screen-x screen-y]
+  (swap! app-state
+         update
+         :enemies
+         conj
+         (create-enemy [(+ (- (:bounds-x @app-state) width)
+                           screen-x)
+                        (+ (- (:bounds-y @app-state) height)
+                           screen-y)])))
+
+(defn spawn-enemies []
+  (when (< (js/random) enemy-spawn-chance)
+    (add-enemy! 64 64)
+    (add-enemy! (- width 128) 64)
+
+    (add-enemy! 64 (- height 128))
+    (add-enemy! (- width 128) (- height 128))))
+
+(defn update-enemies []
+  (when (and (not= :scrolling-x
+               (-> @app-state
+                   :player
+                   :state))
+             (not= :scrolling-x
+                   (-> @app-state
+                       :player
+                       :state)))
+      (swap! app-state
+          update
+          :enemies
+          (partial map (fn [e]
+                         (update e :pos #(v/add % (v/mult 1.5 (v/normalize (v/sub (:pos (:player @app-state)) %)))))))))
+  (swap! app-state
+         update
+         :enemies
+         (partial map (fn [e]
+                        (if (some (fn [b]
+                                    (aabb? (:pos b)
+                                           bullet-size
+                                           (:pos e)
+                                           tile-size))
+                                  (:bullets @app-state))
+                          (update e :health dec)
+                          e))))
+  (doall (map (fn [e]
+                (when (<= (:health e) 0)
+                  (swap! app-state update-in [:player :money] + 10)))
+              (:enemies @app-state)))
+  (swap! app-state
+         update
+         :enemies
+         (partial remove (fn [e]
+                           (<= (:health e) 0))))
+  )
+
+(defn draw-enemy [e]
+  (js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
+  (draw-character (:pos e)))
+
 (defn spawn-room
   "update bounds, reset tile-map to default room, create door where entered, randomly create other doors"
   []
@@ -584,6 +651,7 @@
     (swap! app-state assoc :tile-map default-room)
     (add-door-left)
     (shift-left)
+    (spawn-enemies)
     (when (< door-spawn-chance (js/random)) (add-door-right))
     (when (< door-spawn-chance (js/random)) (add-door-top))
     (when (< door-spawn-chance (js/random)) (add-door-bottom)))
@@ -598,6 +666,7 @@
     (swap! app-state assoc :tile-map default-room)
     (add-door-right)
     (shift-right)
+    (spawn-enemies)
     (when (< door-spawn-chance (js/random)) (add-door-left))
     (when (< door-spawn-chance (js/random)) (add-door-top))
     (when (< door-spawn-chance (js/random)) (add-door-bottom)))
@@ -611,6 +680,7 @@
     (swap! app-state assoc :tile-map default-room)
     (add-door-top)
     (shift-up)
+    (spawn-enemies)
     (when (< door-spawn-chance (js/random)) (add-door-left))
     (when (< door-spawn-chance (js/random)) (add-door-right))
     (when (< door-spawn-chance (js/random)) (add-door-bottom)))
@@ -625,41 +695,10 @@
     (swap! app-state assoc :tile-map default-room)
     (add-door-bottom)
     (shift-down)
+    (spawn-enemies)
     (when (< door-spawn-chance (js/random)) (add-door-left))
     (when (< door-spawn-chance (js/random)) (add-door-right))
     (when (< door-spawn-chance (js/random)) (add-door-top))))
-
-(defn create-enemy [pos]
-  {:pos pos
-   :health 5})
-
-(defn update-enemies []
-  (swap! app-state
-         update
-         :enemies
-         (partial map (fn [e]
-                        (update e :pos #(v/add % (v/mult 2 (v/normalize (v/sub (:pos (:player @app-state)) %))))))))
-  (swap! app-state
-         update
-         :enemies
-         (partial remove (fn [e]
-                           (<= (:health e) 0))))
-  (swap! app-state
-         update
-         :enemies
-         (partial map (fn [e]
-                        (if (some (fn [b]
-                                    (aabb? (:pos b)
-                                           bullet-size
-                                           (:pos e)
-                                           tile-size))
-                                  (:bullets @app-state))
-                          (update e :health dec)
-                          e)))))
-
-(defn draw-enemy [e]
-  (js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
-  (draw-character (:pos e)))
 
 (defn setup []
    ;256 	× 	192
@@ -693,9 +732,8 @@
   (js/text (:bounds-y @app-state) 150 170)
   (js/text (str "pos: " (:pos (:player @app-state))) 150 180)
   (js/text (:direction (:player @app-state)) 150 190)
-  (js/text (:scroll-target-min-x @app-state) 150 200)
-  (js/text (:scroll-target-min-y @app-state) 150 210)
-  (js/text (:enemies @app-state) 150 220)
+  (js/text (:enemies @app-state) 150 200)
+  (js/text (str "player money: " (:money (:player @app-state))) 150 210)
   ;; (js/text (str "scroll-x " (:scroll-x @app-state)) 150 200)
   ;; (js/text (str "scroll-y " (:scroll-y @app-state)) 150 210)
 
