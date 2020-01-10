@@ -631,9 +631,14 @@
 
 (defn create-enemy [pos]
   {:pos pos
-   :health 10})
+   :health 5})
 
 (defn update-enemies []
+  (swap! app-state
+         update
+         :enemies
+         (partial map (fn [e]
+                        (update e :pos #(v/add % (v/mult 2 (v/normalize (v/sub (:pos (:player @app-state)) %))))))))
   (swap! app-state
          update
          :enemies
@@ -690,7 +695,7 @@
   (js/text (:direction (:player @app-state)) 150 190)
   (js/text (:scroll-target-min-x @app-state) 150 200)
   (js/text (:scroll-target-min-y @app-state) 150 210)
-  (js/text (:enemies @app-state) 150 200)
+  (js/text (:enemies @app-state) 150 220)
   ;; (js/text (str "scroll-x " (:scroll-x @app-state)) 150 200)
   ;; (js/text (str "scroll-y " (:scroll-y @app-state)) 150 210)
 
@@ -827,7 +832,6 @@
   )
 
 (defn key-pressed []
-
   (when (= js/key "j")
     (when (= :talking
              (-> @app-state
@@ -851,7 +855,14 @@
                 (:characters @app-state)))))
 
 (defn mouse-pressed []
-  (swap! app-state update :enemies conj (create-enemy [js/mouseX js/mouseY])))
+  (swap! app-state
+         update
+         :enemies
+         conj
+         (create-enemy [(+ (- (:bounds-x @app-state) width)
+                           js/mouseX)
+                        (+ (- (:bounds-y @app-state) height)
+                           js/mouseY)])))
 
 (doto js/window
   (aset "setup" setup)

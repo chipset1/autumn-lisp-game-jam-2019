@@ -40,7 +40,10 @@
 (defn normalize
   [v]
   (let [m (mag v)]
-    (if (and (not= m 0)
+    (if (not= m 1)
+      (mult (/ 1 m) v)
+      v)
+    #_(if (and (not= m 0)
              (not= m 1))
       (div v m)
       v)))
