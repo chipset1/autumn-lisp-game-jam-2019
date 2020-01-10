@@ -406,12 +406,23 @@
                  tile-size))
         (:enemies @app-state)))
 
+(defn out-of-room? [pos]
+  (or (> (v/x pos)
+         (:bounds-x @app-state))
+      (< (v/x pos)
+         (- (:bounds-x @app-state) width))
+      (> (v/y pos)
+         (:bounds-y @app-state))
+      (< (v/y pos)
+         (- (:bounds-y @app-state) height))))
+
 (defn update-bullets []
   (swap! app-state
          update
          :bullets
          (partial remove (fn [b]
-                           (or (bullet-hit-enemy? b)
+                           (or (out-of-room? (:pos b))
+                               (bullet-hit-enemy? b)
                                (tile-map-collision? (:pos b) 10)))))
   (swap! app-state
          update
