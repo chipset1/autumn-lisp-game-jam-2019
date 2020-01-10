@@ -503,7 +503,6 @@
          :scrolling-x)
   (swap! app-state assoc :scroll-target-min-y 0)
   (swap! app-state assoc :scroll-target-min-x width)
-  ;; (swap! app-state assoc :scroll-x (- width))
   (swap! app-state assoc :scroll-start-time (js/millis))
   )
 
@@ -514,7 +513,6 @@
          :scrolling-x)
   (swap! app-state assoc :scroll-target-min-y 0)
   (swap! app-state assoc :scroll-target-min-x (- width))
-  ;; (swap! app-state assoc :scroll-x (- width))
   (swap! app-state assoc :scroll-start-time (js/millis))
   )
 
@@ -525,7 +523,6 @@
          :scrolling-y)
   (swap! app-state assoc :scroll-target-min-x 0)
   (swap! app-state assoc :scroll-target-min-y height)
-  ;; (swap! app-state assoc :scroll-x (- width))
   (swap! app-state assoc :scroll-start-time (js/millis))
   )
 
@@ -536,7 +533,6 @@
          :scrolling-y)
   (swap! app-state assoc :scroll-target-min-x 0)
   (swap! app-state assoc :scroll-target-min-y (- height))
-  ;; (swap! app-state assoc :scroll-x (- width))
   (swap! app-state assoc :scroll-start-time (js/millis))
   )
 
