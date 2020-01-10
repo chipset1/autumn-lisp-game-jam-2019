@@ -1,5 +1,6 @@
 (ns autumn-lisp-game-jam-2019.core
-  (:require [autumn-lisp-game-jam-2019.vector :as v]))
+  (:require [autumn-lisp-game-jam-2019.vector :as v]
+            [autumn-lisp-game-jam-2019.dungeon :as dungeon]))
 
 (enable-console-print!)
 
@@ -650,8 +651,9 @@
   (js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
   (draw-character (:pos e)))
 
+
 (defn spawn-shop-keeper []
-  (if (< (js/random) 0.1)
+  (if (dungeon/room-has-one-door? (:tile-map @app-state))
     (swap! app-state
            assoc-in
            [:shop-keeper :pos]
@@ -670,7 +672,9 @@
 (defn on-room-spawn []
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
   (swap! app-state assoc :tile-map default-room)
-  (spawn-enemies)
+  (spawn-enemies))
+
+(defn after-room-spawn []
   (spawn-shop-keeper))
 
 
@@ -688,7 +692,8 @@
     (shift-left)
     (when (< door-spawn-chance (js/random)) (add-door-right))
     (when (< door-spawn-chance (js/random)) (add-door-top))
-    (when (< door-spawn-chance (js/random)) (add-door-bottom)))
+    (when (< door-spawn-chance (js/random)) (add-door-bottom))
+    (after-room-spawn))
   (when (< (+ (-> @app-state
                   :player
                   :pos
@@ -701,7 +706,8 @@
     (shift-right)
     (when (< door-spawn-chance (js/random)) (add-door-left))
     (when (< door-spawn-chance (js/random)) (add-door-top))
-    (when (< door-spawn-chance (js/random)) (add-door-bottom)))
+    (when (< door-spawn-chance (js/random)) (add-door-bottom))
+    (after-room-spawn))
   (when (> (-> @app-state
                :player
                :pos
@@ -713,7 +719,8 @@
     (shift-up)
     (when (< door-spawn-chance (js/random)) (add-door-left))
     (when (< door-spawn-chance (js/random)) (add-door-right))
-    (when (< door-spawn-chance (js/random)) (add-door-bottom)))
+    (when (< door-spawn-chance (js/random)) (add-door-bottom))
+    (after-room-spawn))
   (when (< (+ (-> @app-state
                   :player
                   :pos
@@ -726,7 +733,8 @@
     (shift-down)
     (when (< door-spawn-chance (js/random)) (add-door-left))
     (when (< door-spawn-chance (js/random)) (add-door-right))
-    (when (< door-spawn-chance (js/random)) (add-door-top))))
+    (when (< door-spawn-chance (js/random)) (add-door-top))
+    (after-room-spawn)))
 
 (defn setup []
    ;256 	× 	192
