@@ -54,10 +54,7 @@
                                                  "more text 4"]
                                         :type :character}
                                        ]
-                          :enemies [{:pos [(+ 256 512) (+ 256 512)]
-                                     :type :enemy}
-                                    {:pos [(+ 256 64 512) (+ 256 512)]
-                                     :type :enemy}]
+                          :enemies []
                           :tile-map default-room
                           :tile-map-previous default-room
                           :scroll-start-time 0
@@ -129,6 +126,7 @@
             32))
 
 (defn draw-player [[x y]]
+  (js/rect x y player-size player-size)
   (js/image (:fantasy-tileset-image @app-state)
             x
             y
@@ -631,6 +629,32 @@
     (when (< door-spawn-chance (js/random)) (add-door-right))
     (when (< door-spawn-chance (js/random)) (add-door-top))))
 
+(defn create-enemy [pos]
+  {:pos pos
+   :health 10})
+
+(defn update-enemies []
+  (swap! app-state
+         update
+         :enemies
+         (partial remove (fn [e]
+                           (<= (:health e) 0))))
+  (swap! app-state
+         update
+         :enemies
+         (partial map (fn [e]
+                        (if (some (fn [b]
+                                    (aabb? (:pos b)
+                                           bullet-size
+                                           (:pos e)
+                                           tile-size))
+                                  (:bullets @app-state))
+                          (update e :health dec)
+                          e)))))
+
+(defn draw-enemy [e]
+  (js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
+  (draw-character (:pos e)))
 
 (defn setup []
    ;256 	× 	192
@@ -666,7 +690,7 @@
   (js/text (:direction (:player @app-state)) 150 190)
   (js/text (:scroll-target-min-x @app-state) 150 200)
   (js/text (:scroll-target-min-y @app-state) 150 210)
-  ;; (js/text (:bullets @app-state) 150 200)
+  (js/text (:enemies @app-state) 150 200)
   ;; (js/text (str "scroll-x " (:scroll-x @app-state)) 150 200)
   ;; (js/text (str "scroll-y " (:scroll-y @app-state)) 150 210)
 
@@ -763,18 +787,8 @@
                              (+ (v/y (:pos character))
                                 74)))))
               (:characters @app-state)))
-  (swap! app-state
-         update
-         :enemies
-         (partial remove (fn [e]
-                           (some (fn [b]
-                                   (aabb? (:pos b)
-                                          bullet-size
-                                          (:pos e)
-                                          tile-size))
-                                 (:bullets @app-state)))))
-
-  (doall (map #(draw-character (:pos %))
+  (update-enemies)
+  (doall (map #(draw-enemy %)
               (:enemies @app-state)))
   (doall (map #(draw-character (:pos %))
               (:characters @app-state)))
@@ -836,10 +850,15 @@
                            :talking)))
                 (:characters @app-state)))))
 
+(defn mouse-pressed []
+  (swap! app-state update :enemies conj (create-enemy [js/mouseX js/mouseY])))
+
 (doto js/window
   (aset "setup" setup)
   (aset "draw" draw)
-  (aset "keyPressed" key-pressed))
+  (aset "keyPressed" key-pressed)
+  (aset "mousePressed" mouse-pressed)
+  )
 
 
 (defn on-js-reload []
