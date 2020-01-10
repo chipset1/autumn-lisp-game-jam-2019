@@ -10,7 +10,7 @@
 (def bullet-size 10)
 (def tile-size 64)
 (def door-spawn-chance 0.5)
-(def enemy-spawn-chance 0.8)
+(def enemy-spawn-chance 0.5)
 (def default-key-pos [(- (+ 256 512 512) 32)
                       (- (+ 256 512) 32)])
 (def default-exit-pos [(- (+ 256 512 512) 32) (- 256 32)])
@@ -56,6 +56,7 @@
                                         :type :character}
                                        ]
                           :enemies []
+                          :shop-keeper {:pos [0 0]}
                           :tile-map default-room
                           :tile-map-previous default-room
                           :scroll-start-time 0
@@ -166,6 +167,17 @@
             32
             32)
   (js/pop))
+
+(defn draw-shop-keeper [[x y]]
+  (js/image (:fantasy-tileset-image @app-state)
+            x
+            y
+            player-size
+            player-size
+            (* 7 32)
+            (* 18 32)
+            32
+            32))
 
 
 
@@ -625,7 +637,7 @@
                           e))))
   (doall (map (fn [e]
                 (when (<= (:health e) 0)
-                  (swap! app-state update-in [:player :money] + 10)))
+                  (swap! app-state update-in [:player :money] inc)))
               (:enemies @app-state)))
   (swap! app-state
          update
@@ -638,6 +650,30 @@
   (js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
   (draw-character (:pos e)))
 
+(defn spawn-shop-keeper []
+  (if (< (js/random) 0.1)
+    (swap! app-state
+           assoc-in
+           [:shop-keeper :pos]
+           [(- (:bounds-x @app-state)
+               (/ width 2)
+               32)
+            (- (:bounds-y @app-state)
+               (/ height 2)
+               32)])
+    (swap! app-state
+           assoc-in
+           [:shop-keeper :pos]
+           [0 0])
+    ))
+
+(defn on-room-spawn []
+  (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
+  (swap! app-state assoc :tile-map default-room)
+  (spawn-enemies)
+  (spawn-shop-keeper))
+
+
 (defn spawn-room
   "update bounds, reset tile-map to default room, create door where entered, randomly create other doors"
   []
@@ -647,11 +683,9 @@
                v/x)
            (:bounds-x @app-state))
     (swap! app-state assoc :bounds-x (+ width (:bounds-x @app-state)))
-    (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
-    (swap! app-state assoc :tile-map default-room)
+    (on-room-spawn)
     (add-door-left)
     (shift-left)
-    (spawn-enemies)
     (when (< door-spawn-chance (js/random)) (add-door-right))
     (when (< door-spawn-chance (js/random)) (add-door-top))
     (when (< door-spawn-chance (js/random)) (add-door-bottom)))
@@ -662,11 +696,9 @@
               64)
            (- (:bounds-x @app-state) width))
     (swap! app-state assoc :bounds-x (- (:bounds-x @app-state) width))
-    (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
-    (swap! app-state assoc :tile-map default-room)
+    (on-room-spawn)
     (add-door-right)
     (shift-right)
-    (spawn-enemies)
     (when (< door-spawn-chance (js/random)) (add-door-left))
     (when (< door-spawn-chance (js/random)) (add-door-top))
     (when (< door-spawn-chance (js/random)) (add-door-bottom)))
@@ -676,11 +708,9 @@
                v/y)
            (:bounds-y @app-state))
     (swap! app-state assoc :bounds-y (+ height (:bounds-y @app-state)))
-    (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
-    (swap! app-state assoc :tile-map default-room)
+    (on-room-spawn)
     (add-door-top)
     (shift-up)
-    (spawn-enemies)
     (when (< door-spawn-chance (js/random)) (add-door-left))
     (when (< door-spawn-chance (js/random)) (add-door-right))
     (when (< door-spawn-chance (js/random)) (add-door-bottom)))
@@ -691,11 +721,9 @@
               64)
            (- (:bounds-y @app-state) height))
     (swap! app-state assoc :bounds-y (- (:bounds-y @app-state) height))
-    (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
-    (swap! app-state assoc :tile-map default-room)
+    (on-room-spawn)
     (add-door-bottom)
     (shift-down)
-    (spawn-enemies)
     (when (< door-spawn-chance (js/random)) (add-door-left))
     (when (< door-spawn-chance (js/random)) (add-door-right))
     (when (< door-spawn-chance (js/random)) (add-door-top))))
@@ -760,6 +788,7 @@
   #_(js/translate (- (- (:bounds-x @app-state) width))
                 (- (- (:bounds-y @app-state) height)))
   (shoot)
+  (draw-shop-keeper (:pos (:shop-keeper @app-state)))
   (draw-stairs (-> @app-state
                    :exit
                    :pos))
