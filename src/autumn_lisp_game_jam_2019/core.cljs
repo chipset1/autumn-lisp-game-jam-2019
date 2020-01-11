@@ -672,12 +672,11 @@
 
 (defn on-room-spawn []
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
-  (swap! app-state assoc :tile-map default-room)
-  (spawn-enemies))
+  (swap! app-state assoc :tile-map default-room))
 
 (defn after-room-spawn []
+  (spawn-enemies)
   (spawn-shop-keeper))
-
 
 (defn spawn-room
   "update bounds, reset tile-map to default room, create door where entered, randomly create other doors"
