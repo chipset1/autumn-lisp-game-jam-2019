@@ -626,8 +626,7 @@
                               :else e))))
   (doall (map (fn [e]
                 (when (<= (:health e) 0)
-                  (swap! app-state update-in [:player :money] inc))
-                )
+                  (swap! app-state update-in [:player :money] inc)))
               (:enemies @app-state)))
   (swap! app-state
          update
