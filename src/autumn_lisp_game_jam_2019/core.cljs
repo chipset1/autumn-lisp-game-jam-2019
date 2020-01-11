@@ -603,7 +603,8 @@
                            screen-y)])))
 
 (defn spawn-enemies []
-  (when (< (js/random) enemy-spawn-chance)
+  (when (and (not (dungeon/room-has-one-door? (:tile-map @app-state)))
+             (< (js/random) enemy-spawn-chance))
     (add-enemy! 64 64)
     (add-enemy! (- width 128) 64)
 
