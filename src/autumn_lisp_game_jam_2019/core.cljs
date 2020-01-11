@@ -616,7 +616,7 @@
                (-> @app-state
                    :player
                    :state))
-             (not= :scrolling-x
+             (not= :scrolling-y
                    (-> @app-state
                        :player
                        :state)))
