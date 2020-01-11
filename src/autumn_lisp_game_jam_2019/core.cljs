@@ -72,6 +72,8 @@
                           :bullet-last-time 0
                           :bullet-interval 200
                           :player {:pos [256 256]
+                                   :health 6
+                                   :max-health 6
                                    :money 0 ; increase once enemy is killed
                                    :direction [0 0]
                                    :sword {:angle 0
@@ -285,20 +287,6 @@
          (-> @app-state
              :player
              :pos)))
-
-(defn reset-level []
-  (swap! app-state
-         assoc-in
-         [:key :pos]
-         default-key-pos)
-  (swap! app-state
-         assoc-in
-         [:player :pos]
-         [(- 256 32) (- 256 32)])
-  (swap! app-state
-         assoc-in
-         [:level :door-locked?]
-         true))
 
 (defn start-sword-swing []
   (swap! app-state
@@ -624,22 +612,22 @@
           update
           :enemies
           (partial map (fn [e]
-                         (update e :pos #(v/add % (v/mult 1.5 (v/normalize (v/sub (:pos (:player @app-state)) %)))))))))
+                         (update e :pos #(v/add % (v/mult 2.0 (v/normalize (v/sub (:pos (:player @app-state)) %)))))))))
   (swap! app-state
          update
          :enemies
          (partial map (fn [e]
-                        (if (some (fn [b]
-                                    (aabb? (:pos b)
-                                           bullet-size
-                                           (:pos e)
-                                           tile-size))
-                                  (:bullets @app-state))
-                          (update e :health dec)
-                          e))))
+                        (cond (aabb? (:pos e) tile-size (:pos (:player @app-state)) player-size)
+                              (do (swap! app-state update-in [:player :health] dec)
+                                  (assoc e :health 0))
+                              (some (fn [b] (aabb? (:pos b) bullet-size (:pos e) tile-size))
+                                    (:bullets @app-state))
+                              (update e :health dec)
+                              :else e))))
   (doall (map (fn [e]
                 (when (<= (:health e) 0)
-                  (swap! app-state update-in [:player :money] inc)))
+                  (swap! app-state update-in [:player :money] inc))
+                )
               (:enemies @app-state)))
   (swap! app-state
          update
@@ -736,6 +724,28 @@
     (when (< door-spawn-chance (js/random)) (add-door-top))
     (after-room-spawn)))
 
+(defn init-starting-room []
+  (add-door-right)
+  (add-door-left)
+  (add-door-top)
+  (add-door-bottom))
+
+(defn reset-level []
+  (init-starting-room)
+  (swap! app-state assoc-in [:player :health] (:max-health (:player @app-state)))
+  (swap! app-state
+         assoc-in
+         [:key :pos]
+         default-key-pos)
+  (swap! app-state
+         assoc-in
+         [:player :pos]
+         [(- (/ width 2) 32) (- (/ height 2) 32)])
+  (swap! app-state
+         assoc-in
+         [:level :door-locked?]
+         true))
+
 (defn setup []
    ;256 	× 	192
   (js/createCanvas width height)
@@ -744,10 +754,7 @@
          assoc
          :fantasy-tileset-image
          (js/loadImage "/assets/fantasy-tileset.png"))
-  (add-door-right)
-  (add-door-left)
-  (add-door-top)
-  (add-door-bottom)
+  (init-starting-room)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state)))
 
 (defn draw []
@@ -770,6 +777,7 @@
   (js/text (:direction (:player @app-state)) 150 190)
   (js/text (:enemies @app-state) 150 200)
   (js/text (str "player money: " (:money (:player @app-state))) 150 210)
+  (js/text (str "player health: " (:health (:player @app-state))) 150 220)
   ;; (js/text (str "scroll-x " (:scroll-x @app-state)) 150 200)
   ;; (js/text (str "scroll-y " (:scroll-y @app-state)) 150 210)
 
@@ -789,6 +797,9 @@
                 (- (v/y (player-room-min))))
   (spawn-room)
   (scroll-to-next-room)
+  (when (<= (:health (:player @app-state))
+           0)
+    (reset-level))
   (js/translate (+ (:scroll-x @app-state)
                    (- (- (:bounds-x @app-state) width)))
                 (+ (:scroll-y @app-state)
