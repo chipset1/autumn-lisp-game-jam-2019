@@ -732,6 +732,7 @@
 (defn reset-level []
   (init-starting-room)
   (swap! app-state assoc-in [:player :health] (:max-health (:player @app-state)))
+  (swap! app-state assoc :enemies [])
   (swap! app-state
          assoc-in
          [:key :pos]
