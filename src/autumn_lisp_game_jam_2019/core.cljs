@@ -621,7 +621,10 @@
           update
           :enemies
           (partial map (fn [e]
-                         (update e :pos #(v/add % (v/mult 2.0 (v/normalize (v/sub (:pos (:player @app-state)) %)))))))))
+                         (update e :pos #(->> (v/sub (:pos (:player @app-state)) %)
+                                              (v/normalize)
+                                              (v/mult 2.0)
+                                              (v/add %)))))))
   (swap! app-state
          update
          :enemies
