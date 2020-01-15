@@ -133,6 +133,11 @@
 
 (defn draw-player [[x y]]
   (js/rect x y player-size player-size)
+  #_(js/image (:player-image @app-state)
+            x
+            y
+            player-size
+            player-size)
   (js/image (:fantasy-tileset-image @app-state)
             x
             y
@@ -759,6 +764,10 @@
          assoc
          :fantasy-tileset-image
          (js/loadImage "/assets/fantasy-tileset.png"))
+  (swap! app-state
+         assoc
+         :player-image
+         (js/loadImage "/assets/test-sprite.png"))
   (init-starting-room)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state)))
 
