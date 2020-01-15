@@ -772,16 +772,22 @@
                  :level
                  :door-locked?))
     (player-movement))
-  (js/stroke 0 255 0)
-  (js/fill 0 255 0)
-  (js/text (int (js/frameRate)) 150 150)
-  (js/text (:bounds-x @app-state) 150 160)
-  (js/text (:bounds-y @app-state) 150 170)
-  (js/text (str "pos: " (:pos (:player @app-state))) 150 180)
-  (js/text (:direction (:player @app-state)) 150 190)
-  (js/text (:enemies @app-state) 150 200)
-  (js/text (str "player money: " (:money (:player @app-state))) 150 210)
-  (js/text (str "player health: " (:health (:player @app-state))) 150 220)
+
+  (let [start-x 100
+        start-y 100
+        dtext (fn [string y]
+                (js/text string start-x (+ start-y y)))]
+    (js/stroke 0 255 0)
+    (js/fill 0 255 0)
+    (dtext (int (js/frameRate)) 0)
+    (dtext (:bounds-x @app-state) 10)
+    (dtext (:bounds-y @app-state) 20)
+    (dtext (str "pos: " (:pos (:player @app-state))) 30)
+    (dtext (:direction (:player @app-state)) 40)
+    (dtext (str "enemies count: " (count (:enemies @app-state))) 50)
+    (dtext (str "player money: " (:money (:player @app-state))) 60)
+    (dtext (str "player health: " (:health (:player @app-state))) 70)
+    (dtext (str "player state: " (-> @app-state :player :state)) 80))
   ;; (js/text (str "scroll-x " (:scroll-x @app-state)) 150 200)
   ;; (js/text (str "scroll-y " (:scroll-y @app-state)) 150 210)
 
