@@ -781,12 +781,13 @@
   (init-starting-room)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
   (swap! app-state assoc-in [:player :health] (:max-health (:player @app-state)))
+  (swap! app-state assoc-in [:player :money] 0)
   (swap! app-state assoc :enemies [])
   (swap! app-state
          assoc-in
          [:key :pos]
          default-key-pos)
-  (swap! app-state
+  #_(swap! app-state
          assoc-in
          [:player :pos]
          [(- (/ width 2) 32) (- (/ height 2) 32)])
