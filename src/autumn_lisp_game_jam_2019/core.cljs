@@ -710,6 +710,7 @@
   (swap! app-state assoc :tile-map default-room))
 
 (defn after-room-spawn []
+  (swap! app-state assoc :enemies [])
   (spawn-enemies)
   (spawn-shop-keeper))
 
