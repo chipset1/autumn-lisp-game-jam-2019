@@ -187,7 +187,23 @@
             32
             32))
 
-
+(defn player-hit-box
+  ([]
+   (player-hit-box (:pos (:player @app-state))))
+  ([[x y]]
+   ;; (js/push)
+   ;; (js/fill 255 0 255 10)
+   ;; (js/rect (+ (v/x (:pos (:player @app-state))) 16)
+   ;;          (+ (v/y (:pos (:player @app-state))) 12)
+   ;;          (- player-size 32)
+   ;;          (- player-size 24))
+   ;; (js/pop)
+   (let [offset-x 16
+         offset-y 12]
+     {:pos [(+ x offset-x)
+           (+ y offset-y)]
+     :width (- player-size (* offset-x 2))
+     :height (- player-size (* offset-y 2))})))
 
 (defn draw-tile-map [tile-map-key offset-x offset-y]
   (doall (map-indexed (fn [i row]
@@ -222,6 +238,19 @@
                          tile-size))]
     (= 1 (get-in (:tile-map @app-state) [row col]))))
 
+(defn player-tile-map-collision?
+  [pos]
+  (let [left (v/x (:pos (player-hit-box pos)))
+        right (+ (v/x (:pos (player-hit-box pos)))
+                 (:width (player-hit-box pos)))
+        top (v/y (:pos (player-hit-box pos)))
+        bottom (+ (v/y (:pos (player-hit-box pos)))
+                  (:height (player-hit-box pos)))]
+    (or (solid-tile? left top)
+        (solid-tile? left bottom)
+        (solid-tile? right top)
+        (solid-tile? right bottom))))
+
 (defn tile-map-collision? [pos size]
   (let [left (v/x pos)
         right (+ (v/x pos) size)
@@ -234,7 +263,7 @@
 
 (defn new-player-position [player-pos vel]
   (let [new-pos (v/add player-pos vel)]
-    (if (tile-map-collision? new-pos player-size)
+    (if (player-tile-map-collision? new-pos)
       player-pos
       new-pos)))
 
@@ -259,11 +288,13 @@
   (when (js/keyIsDown 68)
     (move-player [1 0])))
 
-(defn aabb? [[x1 y1] size1 [x2 y2] size2]
-  (and (< x1 (+ x2 size2))
-       (> (+ x1 size1) x2)
-       (< y1 (+ y2 size2))
-       (> (+ y1 size1) y2)))
+(defn aabb?
+  ([pos1 size1 pos2 size2] (aabb? pos1 size1 size1 pos2 size2 size2))
+  ([[x1 y1] width1 height1 [x2 y2] width2 height2]
+   (and (< x1 (+ x2 width2))
+        (> (+ x1 width1) x2)
+        (< y1 (+ y2 height2))
+        (> (+ y1 height1) y2))))
 
 (defn player-key-collision? []
   (aabb? (-> @app-state
@@ -629,7 +660,12 @@
          update
          :enemies
          (partial map (fn [e]
-                        (cond (aabb? (:pos e) tile-size (:pos (:player @app-state)) player-size)
+                        (cond (aabb? (:pos e)
+                                     tile-size
+                                     tile-size
+                                     (:pos (player-hit-box))
+                                     (:width (player-hit-box))
+                                     (:height (player-hit-box)))
                               (do (swap! app-state update-in [:player :health] dec)
                                   (assoc e :health 0))
                               (some (fn [b] (aabb? (:pos b) bullet-size (:pos e) tile-size))
