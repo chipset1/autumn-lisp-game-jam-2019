@@ -420,9 +420,10 @@
          update
          :bullets
          conj
-         {:pos (-> @app-state
-                   :player
-                   :pos)
+         {:pos (v/add (-> @app-state
+                          :player
+                          :pos)
+                      [32 32])
           :direction dir}))
 
 (defn shoot []
