@@ -58,6 +58,7 @@
                                        ]
                           :enemies []
                           :shop-keeper {:pos [0 0]}
+                          :assets {:images {:fantasy-tileset-image nil}}
                           :tile-map default-room
                           :tile-map-previous default-room
                           :scroll-start-time 0
@@ -84,11 +85,16 @@
                           :exit {:pos default-exit-pos}
                           :level {:door-locked? true
                                   :exit-transition 0}
-                          :fantasy-tileset-image nil
                           :dialog-index 0}))
 
+(defn add-image [key image]
+  (swap! app-state assoc-in [:assets :images key] image))
+
+(defn image [key]
+  (get-in @app-state [:assets :images key]))
+
 (defn draw-wall-tile [x y]
-  (js/image (:fantasy-tileset-image @app-state)
+  (js/image (image :fantasy-tileset-image)
             x
             y
             tile-size
@@ -99,7 +105,7 @@
             32))
 
 (defn draw-key [[x y]]
-  (js/image (:fantasy-tileset-image @app-state)
+  (js/image (image :fantasy-tileset-image)
             x
             y
             tile-size
@@ -110,7 +116,7 @@
             32))
 
 (defn draw-door [[x y]]
-  (js/image (:fantasy-tileset-image @app-state)
+  (js/image (image :fantasy-tileset-image)
             x
             y
             tile-size
@@ -121,7 +127,7 @@
             32))
 
 (defn draw-stairs [[x y]]
-  (js/image (:fantasy-tileset-image @app-state)
+  (js/image (image :fantasy-tileset-image)
             x
             y
             tile-size
@@ -132,13 +138,12 @@
             32))
 
 (defn draw-player [[x y]]
-  (js/rect x y player-size player-size)
   #_(js/image (:player-image @app-state)
             x
             y
             player-size
             player-size)
-  (js/image (:fantasy-tileset-image @app-state)
+  (js/image (image :fantasy-tileset-image)
             x
             y
             player-size
@@ -149,7 +154,7 @@
             32))
 
 (defn draw-character [[x y]]
-  (js/image (:fantasy-tileset-image @app-state)
+  (js/image (image :fantasy-tileset-image)
             x
             y
             tile-size
@@ -165,7 +170,7 @@
   (js/rotate angle)
   (js/ellipse 0 0 tile-size tile-size)
   (js/translate (- tile-size) (- tile-size))
-  (js/image (:fantasy-tileset-image @app-state)
+  (js/image (image :fantasy-tileset-image)
             0
             0
             tile-size
@@ -177,15 +182,22 @@
   (js/pop))
 
 (defn draw-shop-keeper [[x y]]
-  (js/image (:fantasy-tileset-image @app-state)
+  (js/image (image :fantasy-tileset-image)
             x
             y
-            player-size
-            player-size
+            tile-size
+            tile-size
             (* 7 32)
             (* 18 32)
             32
             32))
+
+(defn draw-heart-item [x y]
+  (js/image (image :heart-image)
+            x
+            y
+            tile-size
+            tile-size))
 
 (defn player-hit-box
   ([]
@@ -802,14 +814,9 @@
    ;256 	× 	192
   (js/createCanvas width height)
   (js/noSmooth)
-  (swap! app-state
-         assoc
-         :fantasy-tileset-image
-         (js/loadImage "/assets/fantasy-tileset.png"))
-  (swap! app-state
-         assoc
-         :player-image
-         (js/loadImage "/assets/test-sprite.png"))
+  (add-image :fantasy-tileset-image (js/loadImage "/assets/fantasy-tileset.png"))
+  (add-image :player-image (js/loadImage "/assets/test-sprite.png"))
+  (add-image :heart-image (js/loadImage "/assets/heart.png"))
   (init-starting-room)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state)))
 
