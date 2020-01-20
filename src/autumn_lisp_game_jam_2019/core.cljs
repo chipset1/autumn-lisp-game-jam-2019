@@ -621,9 +621,13 @@
                       (:scroll-interval @app-state))
                    (:scroll-target-min-x @app-state)
                    0)))
-  (when (> (js/millis)
-           (+ (:scroll-start-time @app-state)
-              (:scroll-interval @app-state)))
+  (when (and (not= :not-scrolling
+                   (-> @app-state
+                       :player
+                       :state))
+             (> (js/millis)
+                (+ (:scroll-start-time @app-state)
+                   (:scroll-interval @app-state))))
     (swap! app-state assoc :scroll-x 0)
     (swap! app-state assoc :scroll-y 0)
     (swap! app-state
