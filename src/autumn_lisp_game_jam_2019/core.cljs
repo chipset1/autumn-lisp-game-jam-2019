@@ -57,8 +57,12 @@
                                         :type :character}
                                        ]
                           :enemies []
-                          :shop-keeper {:pos [0 0]}
                           :assets {:images {:fantasy-tileset-image nil}}
+                          :shop-keeper {:pos [0 0]
+                                        :items [{:heal 1
+                                                 :sold? false
+                                                 :cost 10
+                                                 :type :heart}]}
                           :tile-map default-room
                           :tile-map-previous default-room
                           :scroll-start-time 0
@@ -700,18 +704,28 @@
   (js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
   (draw-character (:pos e)))
 
+(defn spawn-shop-keeper-items []
+  (doall (map-indexed (fn [index item]
+                        (swap! app-state
+                               assoc-in
+                               [:shop-keeper :items index :sold?]
+                               false))
+                      (-> @app-state
+                          :shop-keeper
+                          :items))))
 
 (defn spawn-shop-keeper []
   (if (dungeon/room-has-one-door? (:tile-map @app-state))
-    (swap! app-state
-           assoc-in
-           [:shop-keeper :pos]
-           [(- (:bounds-x @app-state)
-               (/ width 2)
-               32)
-            (- (:bounds-y @app-state)
-               (/ height 2)
-               32)])
+    (do (spawn-shop-keeper-items)
+        (swap! app-state
+               assoc-in
+               [:shop-keeper :pos]
+               [(- (:bounds-x @app-state)
+                   (/ width 2)
+                   32)
+                (- (:bounds-y @app-state)
+                   (/ height 2)
+                   32)]))
     (swap! app-state
            assoc-in
            [:shop-keeper :pos]
@@ -810,6 +824,54 @@
          [:level :door-locked?]
          true))
 
+(defn item-player-collision? [item-x item-y]
+  (aabb? [item-x item-y]
+         tile-size
+         tile-size
+         (:pos (player-hit-box))
+         (:width (player-hit-box))
+         (:height (player-hit-box))))
+
+(defn update-shop-keeper-items []
+  (doall (map-indexed (fn [index item]
+                        (when (and (= :heart (:type item))
+                                   (not (:sold? item))
+                                   (>= (:money (:player @app-state))
+                                       (:cost item))
+                                   (< (:health (:player @app-state))
+                                      (:max-health (:player @app-state)))
+                                   (item-player-collision? (v/x (-> @app-state
+                                                                    :shop-keeper
+                                                                    :pos))
+                                                           (+ 64
+                                                              (v/y (-> @app-state
+                                                                       :shop-keeper
+                                                                       :pos)))))
+                          (swap! app-state assoc-in [:shop-keeper :items index :sold?] true)
+                          (swap! app-state update-in [:player :health] + (:heal item))
+                          (swap! app-state update-in [:player :money] - (:cost item))))
+                      (-> @app-state
+                          :shop-keeper
+                          :items))))
+
+(defn draw-shop-keeper-items []
+  (doall (map (fn [item]
+                (when (= :heart (:type item))
+                  (let [x (v/x (-> @app-state
+                                   :shop-keeper
+                                   :pos))
+                        y (+ 64
+                             (v/y (-> @app-state
+                                      :shop-keeper
+                                      :pos)))]
+                    (when (not (:sold? item))
+                      (js/text "     $10\n+1 health" x (+ 64 y))
+                      (draw-heart-item x y)))))
+              (-> @app-state
+                  :shop-keeper
+                  :items))))
+
+
 (defn setup []
    ;256 	× 	192
   (js/createCanvas width height)
@@ -877,6 +939,8 @@
                 (- (- (:bounds-y @app-state) height)))
   (shoot)
   (draw-shop-keeper (:pos (:shop-keeper @app-state)))
+  (draw-shop-keeper-items)
+  (update-shop-keeper-items)
   (draw-stairs (-> @app-state
                    :exit
                    :pos))
