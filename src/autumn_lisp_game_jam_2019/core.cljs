@@ -657,6 +657,12 @@
     (add-enemy! 64 (- height 128))
     (add-enemy! (- width 128) (- height 128))))
 
+(defn check-enemy-tile-collision [new-enemy old-pos]
+  (update new-enemy :pos (fn [new-pos]
+                           (if (tile-map-collision? new-pos tile-size)
+                             old-pos
+                             new-pos))))
+
 (defn update-enemies []
   (when (and (not= :scrolling-x
                (-> @app-state
@@ -669,7 +675,9 @@
       (swap! app-state
           update
           :enemies
-          (partial map #(enemy/update-enemy app-state %))))
+          (partial map (fn [enemy]
+                         (check-enemy-tile-collision (enemy/update-enemy app-state enemy)
+                                                     (:pos enemy))))))
   (swap! app-state
          update
          :enemies
