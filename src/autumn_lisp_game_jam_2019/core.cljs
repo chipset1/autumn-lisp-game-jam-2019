@@ -1,5 +1,6 @@
 (ns autumn-lisp-game-jam-2019.core
   (:require [autumn-lisp-game-jam-2019.vector :as v]
+            [autumn-lisp-game-jam-2019.enemy :as enemy]
             [autumn-lisp-game-jam-2019.dungeon :as dungeon]))
 
 (enable-console-print!)
@@ -635,10 +636,6 @@
            [:player :state]
            :not-scrolling)))
 
-(defn create-enemy [pos]
-  {:pos pos
-   :health 5})
-
 (defn add-enemy!
   "adds enemy at screen coordinates"
   [screen-x screen-y]
@@ -646,7 +643,7 @@
          update
          :enemies
          conj
-         (create-enemy [(+ (- (:bounds-x @app-state) width)
+         (enemy/create-enemy [(+ (- (:bounds-x @app-state) width)
                            screen-x)
                         (+ (- (:bounds-y @app-state) height)
                            screen-y)])))
@@ -672,11 +669,7 @@
       (swap! app-state
           update
           :enemies
-          (partial map (fn [e]
-                         (update e :pos #(->> (v/sub (:pos (:player @app-state)) %)
-                                              (v/normalize)
-                                              (v/mult 2.0)
-                                              (v/add %)))))))
+          (partial map #(enemy/update-enemy app-state %))))
   (swap! app-state
          update
          :enemies
@@ -1078,14 +1071,7 @@
                 (:characters @app-state)))))
 
 (defn mouse-pressed []
-  (swap! app-state
-         update
-         :enemies
-         conj
-         (create-enemy [(+ (- (:bounds-x @app-state) width)
-                           js/mouseX)
-                        (+ (- (:bounds-y @app-state) height)
-                           js/mouseY)])))
+  (swap! app-state update :enemies conj (enemy/create-enemy [js/mouseX js/mouseY])))
 
 (doto js/window
   (aset "setup" setup)
