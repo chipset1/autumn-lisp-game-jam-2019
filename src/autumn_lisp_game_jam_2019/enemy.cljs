@@ -12,18 +12,19 @@
     (f x)
     x))
 
-(defn create-enemy [pos]
-  {:pos pos
-   :health 3
-   :seek {:speed 2}
-   :udlr {:move-time (js/millis)
-          :speed 3
-          :move-interval 500
-          :current-direction (first (shuffle enemy-directions))
-          :directions enemy-directions}}
-  #_{:pos pos
-     :health 3
-     :seek {:speed 2}})
+(defn create-enemy [pos type]
+  (cond (= :udlr type)
+        {:pos pos
+         :health 3
+         :udlr {:move-time (js/millis)
+                :speed 3
+                :move-interval 500
+                :current-direction (first (shuffle enemy-directions))
+                :directions enemy-directions}}
+        (= :seek type)
+        {:pos pos
+         :health 3
+         :seek {:speed 2}}))
 
 (defn udlr-update-move-time [enemy]
   (if (> (- (js/millis)

@@ -12,10 +12,19 @@
 (def bullet-size 10)
 (def tile-size 64)
 (def door-spawn-chance 0.5)
-(def enemy-spawn-chance 0.5)
+(def enemy-spawn-chance 0.9)
 (def default-key-pos [(- (+ 256 512 512) 32)
                       (- (+ 256 512) 32)])
 (def default-exit-pos [(- (+ 256 512 512) 32) (- 256 32)])
+
+(def corner-positions [[64 64]
+                             [(- width 128) 64]
+                             [64 (- height 128)]
+                             [(- width 128) (- height 128)]])
+(def center-corner-positions [[(* tile-size 2) (* tile-size 2)]
+                                    [(- width (* tile-size 3)) (* tile-size 2)]
+                                    [(* tile-size 2) (- height (* tile-size 3))]
+                                    [(- width (* tile-size 3)) (- height (* tile-size 3))]])
 
 (def tile-map [[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
                [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
@@ -638,24 +647,25 @@
 
 (defn add-enemy!
   "adds enemy at screen coordinates"
-  [screen-x screen-y]
+  [screen-x screen-y type]
   (swap! app-state
          update
          :enemies
          conj
          (enemy/create-enemy [(+ (- (:bounds-x @app-state) width)
-                           screen-x)
-                        (+ (- (:bounds-y @app-state) height)
-                           screen-y)])))
+                                 screen-x)
+                              (+ (- (:bounds-y @app-state) height)
+                                 screen-y)]
+                             type)))
 
 (defn spawn-enemies []
   (when (and (not (dungeon/room-has-one-door? (:tile-map @app-state)))
              (< (js/random) enemy-spawn-chance))
-    (add-enemy! 64 64)
-    (add-enemy! (- width 128) 64)
-
-    (add-enemy! 64 (- height 128))
-    (add-enemy! (- width 128) (- height 128))))
+    (let [spawn-seeker (> (js/random) 0.5)]
+      (doseq [[x y] center-corner-positions]
+        (if spawn-seeker
+          (add-enemy! x y :seek)
+          (add-enemy! x y :udlr))))))
 
 (defn check-enemy-tile-collision [new-enemy old-pos]
   (update new-enemy :pos (fn [new-pos]
@@ -1079,7 +1089,7 @@
                 (:characters @app-state)))))
 
 (defn mouse-pressed []
-  (swap! app-state update :enemies conj (enemy/create-enemy [js/mouseX js/mouseY])))
+  (swap! app-state update :enemies conj (enemy/create-enemy [(- width 128) (- height 128)] :udlr)))
 
 (doto js/window
   (aset "setup" setup)
@@ -1087,7 +1097,6 @@
   (aset "keyPressed" key-pressed)
   (aset "mousePressed" mouse-pressed)
   )
-
 
 (defn on-js-reload []
   ;; optionally touch your app-state to force rerendering depending on
