@@ -486,11 +486,26 @@
          (- (:bounds-y @app-state) height))))
 
 (defn update-enemy-bullets []
+  (doall (map (fn [b]
+                (when (aabb? (:pos b)
+                             bullet-size
+                             bullet-size
+                             (:pos (player-hit-box))
+                             (:width (player-hit-box))
+                             (:height (player-hit-box)))
+                  (swap! app-state update-in [:player :health] dec)))
+              (:enemy-bullets @app-state)))
   (swap! app-state
          update
          :enemy-bullets
          (partial remove (fn [b]
                            (or (out-of-room? (:pos b))
+                               (aabb? (:pos b)
+                                      bullet-size
+                                      bullet-size
+                                      (:pos (player-hit-box))
+                                      (:width (player-hit-box))
+                                      (:height (player-hit-box)))
                                (tile-map-collision? (:pos b) 10)))))
   (swap! app-state
          update
