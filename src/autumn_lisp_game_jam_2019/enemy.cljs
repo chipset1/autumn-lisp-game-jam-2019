@@ -12,15 +12,27 @@
     (f x)
     x))
 
+(defn random-direction []
+  (first (shuffle enemy-directions)))
+
 (defn create-enemy [pos type]
-  (cond (= :udlr type)
+  (cond (= :udlr-shoot type)
+        {:pos pos
+         :health 3
+         :udlr {:move-time (js/millis)
+                :speed 3
+                :move-interval 1500
+                :current-direction (random-direction)}
+         :random-shoot {:direction (random-direction)
+                        :shoot-time (js/millis)
+                        :interval 1000}}
+        (= :udlr type)
         {:pos pos
          :health 3
          :udlr {:move-time (js/millis)
                 :speed 3
                 :move-interval 500
-                :current-direction (first (shuffle enemy-directions))
-                :directions enemy-directions}}
+                :current-direction (random-direction)}}
         (= :seek type)
         {:pos pos
          :health 3
@@ -32,7 +44,17 @@
          (:move-interval (:udlr enemy)))
     (-> enemy
         (assoc-in [:udlr :move-time] (js/millis))
-        (assoc-in [:udlr :current-direction] (first (shuffle (:directions (:udlr enemy))))))
+        (assoc-in [:udlr :current-direction] (random-direction)))
+    enemy))
+
+(defn shoot-update [app-state enemy]
+  (if (> (- (js/millis)
+              (:shoot-time (:random-shoot enemy)))
+           (:interval (:random-shoot enemy)))
+    (do (swap! app-state update :enemy-bullets conj {:pos (:pos enemy)
+                                                     :speed 10
+                                                     :direction (random-direction)})
+        (assoc-in enemy [:random-shoot :shoot-time] (js/millis)))
     enemy))
 
 (defn update-enemy [app-state enemy]
@@ -41,6 +63,8 @@
   ;;                          (v/mult-vec [4 0])
   ;;                          (v/add %)))
   (-> enemy
+      (if-update :random-shoot (fn [e]
+                                 (shoot-update app-state e)))
       (if-update :udlr (fn [e]
                          (udlr-update-move-time (update e :pos #(->> (v/mult (:speed (:udlr enemy))
                                                                             (:current-direction (:udlr enemy)))

@@ -67,6 +67,7 @@
                                         :type :character}
                                        ]
                           :enemies []
+                          :enemy-bullets []
                           :assets {:images {:fantasy-tileset-image nil}}
                           :shop-keeper {:pos [0 0]
                                         :items [{:heal 1
@@ -484,6 +485,23 @@
       (< (v/y pos)
          (- (:bounds-y @app-state) height))))
 
+(defn update-enemy-bullets []
+  (swap! app-state
+         update
+         :enemy-bullets
+         (partial remove (fn [b]
+                           (or (out-of-room? (:pos b))
+                               (tile-map-collision? (:pos b) 10)))))
+  (swap! app-state
+         update
+         :enemy-bullets
+         (fn [bullets]
+           (map (fn [b]
+                  (assoc b
+                         :pos
+                         (v/add (:pos b) (v/mult (:speed b) (:direction b)))))
+                bullets))))
+
 (defn update-bullets []
   (swap! app-state
          update
@@ -502,7 +520,7 @@
                          (v/add (:pos b) (v/mult 15 (:direction b)))))
                 bullets))))
 
-(defn display-bullets []
+(defn display-bullets [bullet-key]
   (doall (map (fn [bullet]
                 (js/fill 255)
                 (js/stroke 0)
@@ -510,7 +528,7 @@
                          (v/y (:pos bullet))
                          bullet-size
                          bullet-size))
-              (:bullets @app-state))))
+              (bullet-key @app-state))))
 
 (defn add-door-right []
   (swap! app-state
@@ -661,11 +679,9 @@
 (defn spawn-enemies []
   (when (and (not (dungeon/room-has-one-door? (:tile-map @app-state)))
              (< (js/random) enemy-spawn-chance))
-    (let [spawn-seeker (> (js/random) 0.5)]
+    (let [enemy-type (first (shuffle [:seek :udlr :udlr-shoot]))]
       (doseq [[x y] center-corner-positions]
-        (if spawn-seeker
-          (add-enemy! x y :seek)
-          (add-enemy! x y :udlr))))))
+        (add-enemy! x y enemy-type)))))
 
 (defn check-enemy-tile-collision [new-enemy old-pos]
   (update new-enemy :pos (fn [new-pos]
@@ -986,7 +1002,9 @@
                    :pos))
 
   (update-bullets)
-  (display-bullets)
+  (update-enemy-bullets)
+  (display-bullets :bullets)
+  (display-bullets :enemy-bullets)
   ;; (swing-sword)
 
   (doall (map (fn [character]
