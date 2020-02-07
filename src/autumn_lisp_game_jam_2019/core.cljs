@@ -664,7 +664,7 @@
                       (:scroll-interval @app-state))
                    (:scroll-target-min-x @app-state)
                    0)))
-  (when (and (not= :not-scrolling
+  (when (and (not= :talking
                    (-> @app-state
                        :player
                        :state))
