@@ -961,13 +961,19 @@
     (dtext (:bounds-y @app-state) 20)
     (dtext (str "pos: " (:pos (:player @app-state))) 30)
     (dtext (:direction (:player @app-state)) 40)
-    (dtext (str "enemies count: " (count (:enemies @app-state))) 50)
+    (dtext (str "enemy 0: " (:enemies @app-state)) 50)
     (dtext (str "player money: " (:money (:player @app-state))) 60)
-    (dtext (str "player health: " (:health (:player @app-state))) 70)
-    (dtext (str "player state: " (-> @app-state :player :state)) 80))
+    (dtext (str "player health: " (:health (:player @app-state)) " / 6") 70)
+    (dtext (str "enemy bullets: "(:enemy-bullets @app-state)) 80)
+    (dtext (str (:state (:player @app-state))) 90)
+    )
+
+  ;; (doseq [e (:enemies @app-state)]
+  ;;   (swap! app-state update :enemy-bullets conj {:pos (:pos e)
+  ;;                                                :speed 10
+  ;;                                                :direction [1 1]}))
   ;; (js/text (str "scroll-x " (:scroll-x @app-state)) 150 200)
   ;; (js/text (str "scroll-y " (:scroll-y @app-state)) 150 210)
-
   #_(js/translate (- (+ 32
                       (- (-> @app-state
                            :player
@@ -1132,7 +1138,10 @@
                 (:characters @app-state)))))
 
 (defn mouse-pressed []
-  (swap! app-state update :enemies conj (enemy/create-enemy [(- width 128) (- height 128)] :udlr)))
+  #_(swap! app-state update :enemies conj (enemy/create-enemy [js/mouseX js/mouseY] :shoot))
+  (swap! app-state update :enemy-bullets conj {:pos (:pos (:player @app-state))
+                                               :speed 10
+                                               :direction [1 1]}))
 
 (doto js/window
   (aset "setup" setup)
