@@ -43,7 +43,7 @@
          :health 3
          :udlr {:move-time (js/millis)
                 :speed 3
-                :move-interval 500
+                :move-interval 400
                 :current-direction (random-direction)}}
         (= :seek type)
         {:pos pos
