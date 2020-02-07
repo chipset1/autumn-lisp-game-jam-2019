@@ -16,7 +16,19 @@
   (first (shuffle enemy-directions)))
 
 (defn create-enemy [pos type]
-  (cond (= :udlr-shoot type)
+  (cond (= :sit-and-shoot type)
+        {:pos pos
+         :health 10
+         :shoot-player {:shoot-time (js/millis)
+                        :interval 1000}}
+        (= :rotate-seek type)
+        {:pos pos
+         :health 3
+         :seek {:speed 1}
+         :rotate {:radius 4
+                  :theta (js/random js/TWO_PI)
+                  :theta-vel 0.03}}
+        (= :udlr-shoot type)
         {:pos pos
          :health 3
          :udlr {:move-time (js/millis)
@@ -57,12 +69,38 @@
         (assoc-in enemy [:random-shoot :shoot-time] (js/millis)))
     enemy))
 
+(defn shoot-player [app-state enemy]
+  (if (> (- (js/millis)
+            (:shoot-time (:shoot-player enemy)))
+         (:interval (:shoot-player enemy)))
+    (do (swap! app-state update :enemy-bullets conj {:pos (:pos enemy)
+                                                     :speed 5
+                                                     :direction (-> (v/add (:pos (:player @app-state))
+                                                                            [32 32])
+                                                                    (v/sub (:pos enemy))
+                                                                    (v/normalize))})
+        (assoc-in enemy [:shoot-player :shoot-time] (js/millis)))
+    enemy)
+  )
+
 (defn update-enemy [app-state enemy]
   ;; (update enemy :pos #(->> (v/sub (:pos (:player @app-state)) %)
   ;;                          (v/normalize)
   ;;                          (v/mult-vec [4 0])
   ;;                          (v/add %)))
   (-> enemy
+      (if-update :shoot-player (fn [e]
+                                 (shoot-player app-state e)))
+      (if-update :rotate (fn [e]
+                           (let [{:keys [radius
+                                         theta
+                                         theta-vel]} (:rotate e)]
+                             (-> e
+                                 (assoc :pos (vector (+ (v/x (:pos e))
+                                                        (* radius (js/cos theta)))
+                                                     (+ (v/y (:pos e))
+                                                        (* radius (js/sin theta)))))
+                                 (update-in [:rotate :theta] #(+ % theta-vel))))))
       (if-update :random-shoot (fn [e]
                                  (shoot-update app-state e)))
       (if-update :udlr (fn [e]

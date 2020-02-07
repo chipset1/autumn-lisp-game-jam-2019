@@ -694,9 +694,19 @@
 (defn spawn-enemies []
   (when (and (not (dungeon/room-has-one-door? (:tile-map @app-state)))
              (< (js/random) enemy-spawn-chance))
-    (let [enemy-type (first (shuffle [:seek :udlr :udlr-shoot]))]
-      (doseq [[x y] center-corner-positions]
-        (add-enemy! x y enemy-type)))))
+    (let [enemy-type (first (shuffle [:seek
+                                      :udlr
+                                      :udlr-shoot
+                                      :rotate-seek
+                                      :sit-and-shoot]))]
+      (if (= :sit-and-shoot enemy-type)
+        (add-enemy! (- (/ width 2)
+                       (/ tile-size 2))
+                    (- (/ height 2)
+                       (/ tile-size 2))
+                    enemy-type)
+        (doseq [[x y] center-corner-positions]
+         (add-enemy! x y enemy-type))))))
 
 (defn check-enemy-tile-collision [new-enemy old-pos]
   (update new-enemy :pos (fn [new-pos]
