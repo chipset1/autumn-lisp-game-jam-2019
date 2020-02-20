@@ -13,9 +13,6 @@
 (def tile-size 64)
 (def door-spawn-chance 0.5)
 (def enemy-spawn-chance 0.9)
-(def default-key-pos [(- (+ 256 512 512) 32)
-                      (- (+ 256 512) 32)])
-(def default-exit-pos [(- (+ 256 512 512) 32) (- 256 32)])
 
 (def corner-positions [[64 64]
                              [(- width 128) 64]
@@ -25,26 +22,6 @@
                                     [(- width (* tile-size 3)) (* tile-size 2)]
                                     [(* tile-size 2) (- height (* tile-size 3))]
                                     [(- width (* tile-size 3)) (- height (* tile-size 3))]])
-
-(def tile-map [[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
-               [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
-               [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 1 1 1 1 1]
-               [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 1 1 1 1 1]
-               [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
-               [1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1]
-               [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
-               ])
 
 (def default-room [[1 1 1 1 1 1 1 1 1 1 1 1]
                    [1 0 0 0 0 0 0 0 0 0 0 1]
@@ -59,11 +36,7 @@
 
 (defonce app-state (atom {:characters [{:pos [(- 256 32) (- 256 32)]
                                         :dialog ["hey this is a game"
-                                                 "go and find the key and exit"
-                                                 "more text 1"
-                                                 "more text 2"
-                                                 "more text 3"
-                                                 "more text 4"]
+                                                 "go find a way out of the dungeon"]
                                         :type :character}
                                        ]
                           :enemies []
@@ -96,10 +69,6 @@
                                            :swing-time 100
                                            :swing-start 0}
                                    :state nil}
-                          :key {:pos default-key-pos}
-                          :exit {:pos default-exit-pos}
-                          :level {:door-locked? true
-                                  :exit-transition 0}
                           :dialog-index 0}))
 
 (defn add-image [key image]
@@ -116,39 +85,6 @@
             tile-size
             64
             64
-            32
-            32))
-
-(defn draw-key [[x y]]
-  (js/image (image :fantasy-tileset-image)
-            x
-            y
-            tile-size
-            tile-size
-            128
-            128
-            32
-            32))
-
-(defn draw-door [[x y]]
-  (js/image (image :fantasy-tileset-image)
-            x
-            y
-            tile-size
-            tile-size
-            128
-            32
-            32
-            32))
-
-(defn draw-stairs [[x y]]
-  (js/image (image :fantasy-tileset-image)
-            x
-            y
-            tile-size
-            tile-size
-            160
-            32
             32
             32))
 
@@ -240,24 +176,6 @@
                                             row)))
                       (tile-map-key @app-state))))
 
-(defn player-room-min
-  "min room bounds that player is in.
-  eg: in the starting room this is 0,0.
-      one over to the right its width, 0"
-  []
-  [(* width
-      (js/floor (/ (-> @app-state
-                       :player
-                       :pos
-                       v/x)
-                   js/width)))
-   (* height
-      (js/floor (/ (-> @app-state
-                       :player
-                       :pos
-                       v/y)
-                   js/height)))])
-
 (defn solid-tile? [x y]
   (let [col (js/floor (/ (- x (- (:bounds-x @app-state) width))
                          tile-size))
@@ -322,34 +240,6 @@
         (> (+ x1 width1) x2)
         (< y1 (+ y2 height2))
         (> (+ y1 height1) y2))))
-
-(defn player-key-collision? []
-  (aabb? (-> @app-state
-             :player
-             :pos)
-         player-size
-         (-> @app-state
-             :key
-             :pos)
-         tile-size))
-
-(defn key-door-collision? []
-  (aabb? (-> @app-state
-             :key
-             :pos)
-         tile-size
-         (-> @app-state
-             :exit
-             :pos)
-         tile-size))
-
-(defn attach-key-to-player []
-  (swap! app-state
-         assoc-in
-         [:key :pos]
-         (-> @app-state
-             :player
-             :pos)))
 
 (defn start-sword-swing []
   (swap! app-state
@@ -869,16 +759,9 @@
   (swap! app-state assoc :enemies [])
   (swap! app-state
          assoc-in
-         [:key :pos]
-         default-key-pos)
-  #_(swap! app-state
-         assoc-in
          [:player :pos]
-         [(- (/ width 2) 32) (- (/ height 2) 32)])
-  (swap! app-state
-         assoc-in
-         [:level :door-locked?]
-         true))
+         [(- (:bounds-x @app-state) (/ width 2) 32)
+          (- (:bounds-y @app-state) (/ height 2) 32)]))
 
 (defn item-player-collision? [item-x item-y]
   (aabb? [item-x item-y]
@@ -941,13 +824,10 @@
 (defn draw []
   (js/background 50)
   (js/fill 0)
-  (when (and (not= :talking
-                   (-> @app-state
-                       :player
-                       :state))
-             (-> @app-state
-                 :level
-                 :door-locked?))
+  (when (not= :talking
+              (-> @app-state
+                  :player
+                  :state))
     (player-movement))
 
   (let [start-x 100
@@ -986,8 +866,6 @@
                            :pos
                            v/y)
                        256))))
-  #_(js/translate (- (v/x (player-room-min)))
-                (- (v/y (player-room-min))))
   (spawn-room)
   (scroll-to-next-room)
   (when (<= (:health (:player @app-state))
@@ -1003,31 +881,6 @@
   (draw-shop-keeper (:pos (:shop-keeper @app-state)))
   (draw-shop-keeper-items)
   (update-shop-keeper-items)
-  (draw-stairs (-> @app-state
-                   :exit
-                   :pos))
-  (when (and (key-door-collision?)
-             (-> @app-state
-                 :level
-                 :door-locked?))
-    (swap! app-state
-           assoc-in
-           [:level :door-locked?]
-           false)
-    (swap! app-state
-           assoc-in
-           [:level :exit-transition]
-           (js/millis)))
-  (when (-> @app-state
-            :level
-            :door-locked?)
-    (draw-key (-> @app-state
-                  :key
-                  :pos))
-    (draw-door (-> @app-state
-                   :exit
-                   :pos)))
-
   (draw-player (-> @app-state
                    :player
                    :pos))
@@ -1090,28 +943,6 @@
                     (:scroll-target-min-x @app-state))
                  (- (- (:bounds-y @app-state) height)
                     (:scroll-target-min-y @app-state)))
-  (when (player-key-collision?)
-    (attach-key-to-player))
-  (when (not (-> @app-state
-                 :level
-                 :door-locked?))
-    (when (> (js/millis)
-             (+ 1000
-                (-> @app-state
-                    :level
-                    :exit-transition)))
-      (reset-level))
-    (js/fill 50 (js/map (js/millis)
-                       (-> @app-state
-                           :level
-                           :exit-transition)
-                       (+ 1000
-                          (-> @app-state
-                              :level
-                              :exit-transition))
-                       0
-                       255))
-    (js/rect (* 512 2) 0 js/width js/height))
   )
 
 (defn key-pressed []
