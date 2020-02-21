@@ -19,11 +19,13 @@
   (cond (= :sit-and-shoot type)
         {:pos pos
          :health 10
+         :image-type :sorcerer
          :shoot-player {:shoot-time (js/millis)
                         :interval 1000}}
         (= :rotate-seek type)
         {:pos pos
          :health 3
+         :image-type :ghoul
          :seek {:speed 1}
          :rotate {:radius 4
                   :theta (js/random js/TWO_PI)
@@ -31,6 +33,7 @@
         (= :udlr-shoot type)
         {:pos pos
          :health 3
+         :image-type :archer
          :udlr {:move-time (js/millis)
                 :speed 3
                 :move-interval 1500
@@ -41,6 +44,7 @@
         (= :udlr type)
         {:pos pos
          :health 3
+         :image-type :skeleton
          :udlr {:move-time (js/millis)
                 :speed 3
                 :move-interval 400
@@ -48,6 +52,7 @@
         (= :seek type)
         {:pos pos
          :health 3
+         :image-type :hedge-hog
          :seek {:speed 2}}))
 
 (defn udlr-update-move-time [enemy]

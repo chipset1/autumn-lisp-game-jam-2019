@@ -115,6 +115,74 @@
             32
             32))
 
+(defn draw-enemy-image [[x y] type]
+  (cond (= :archer type)
+        (js/image (image :fantasy-tileset-image)
+                  x
+                  y
+                  tile-size
+                  tile-size
+                  (* 4 32)
+                  (* 18 32)
+                  32
+                  32)
+        (= :ghoul type)
+        (js/image (image :fantasy-tileset-image)
+                  x
+                  y
+                  tile-size
+                  tile-size
+                  (* 6 32)
+                  (* 21 32)
+                  32
+                  32)
+        (= :sorcerer type)
+        (js/image (image :fantasy-tileset-image)
+                  x
+                  y
+                  tile-size
+                  tile-size
+                  (* 6 32)
+                  (* 18 32)
+                  32
+                  32)
+        (= :hedge-hog type)
+        (js/image (image :fantasy-tileset-image)
+                  x
+                  y
+                  tile-size
+                  tile-size
+                  (* 6 32)
+                  (* 20 32)
+                  32
+                  32)
+        (= :skeleton type)
+        (js/image (image :fantasy-tileset-image)
+                  x
+                  y
+                  tile-size
+                  tile-size
+                  (* 2 32)
+                  (* 22 32)
+                  32
+                  32)
+        :else
+        (js/image (image :fantasy-tileset-image)
+                  x
+                  y
+                  tile-size
+                  tile-size
+                  (* 2 32)
+                  (* 22 32)
+                  32
+                  32)))
+
+(defn draw-enemy [e]
+  (js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
+  (draw-enemy-image (:pos e) (:image-type e)))
+
+
+
 (defn draw-sword [[x y] angle]
   (js/push)
   (js/translate (+ x 32) (+ y 32))
@@ -646,9 +714,7 @@
                            (<= (:health e) 0))))
   )
 
-(defn draw-enemy [e]
-  (js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
-  (draw-character (:pos e)))
+
 
 (defn spawn-shop-keeper-items []
   (doall (map-indexed (fn [index item]
