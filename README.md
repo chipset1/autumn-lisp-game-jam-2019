@@ -1,10 +1,12 @@
 # autumn-lisp-game-jam-2019
 
-FIXME: Write a one-line description of your library/project.
+Small Binding of issac clone
 
 ## Overview
 
-FIXME: Write a paragraph about the library/project and highlight its goals.
+Game started as a entry to the autumn lisp game jam. Now is a seperate game.
+
+The main purpose of the game is for me to learn and get back into game developement after a long break.
 
 ## Setup
 
@@ -30,7 +32,7 @@ To create a production build run:
     lein do clean, cljsbuild once min
 
 And open your browser in `resources/public/index.html`. You will not
-get live reloading, nor a REPL. 
+get live reloading, nor a REPL.
 
 ## License
 
