@@ -5,6 +5,7 @@
 
 (enable-console-print!)
 
+(def debug true)
 (def width (* 1.5 512))
 (def height (* 1.5 384))
 (def player-speed 5)
@@ -60,7 +61,7 @@
                           :bullets []
                           :bullet-last-time 0
                           :bullet-interval 200
-                          :player {:pos [256 256]
+                          :player {:pos [(- (/ width 2) 32) (- (/ height 2) 32)]
                                    :health 6
                                    :max-health 6
                                    :money 0 ; increase once enemy is killed
@@ -69,7 +70,8 @@
                                            :swing-time 100
                                            :swing-start 0}
                                    :state nil}
-                          :dialog-index 0}))
+                          :dialog-index 0
+                          :game-over? false}))
 
 (defn add-image [key image]
   (swap! app-state assoc-in [:assets :images key] image))
@@ -889,30 +891,33 @@
 
 (defn draw []
   (js/background 50)
-  (js/fill 0)
-  (when (not= :talking
-              (-> @app-state
-                  :player
-                  :state))
-    (player-movement))
 
-  (let [start-x 100
-        start-y 100
-        dtext (fn [string y]
-                (js/text string start-x (+ start-y y)))]
-    (js/stroke 0 255 0)
-    (js/fill 0 255 0)
-    (dtext (int (js/frameRate)) 0)
-    (dtext (:bounds-x @app-state) 10)
-    (dtext (:bounds-y @app-state) 20)
-    (dtext (str "pos: " (:pos (:player @app-state))) 30)
-    (dtext (:direction (:player @app-state)) 40)
-    (dtext (str "enemy 0: " (:enemies @app-state)) 50)
-    (dtext (str "player money: " (:money (:player @app-state))) 60)
-    (dtext (str "player health: " (:health (:player @app-state)) " / 6") 70)
-    (dtext (str "enemy bullets: "(:enemy-bullets @app-state)) 80)
-    (dtext (str (:state (:player @app-state))) 90)
-    )
+  (js/stroke 0 255 0)
+  (js/fill 0 255 0)
+  (if debug
+    (let [start-x 100
+          start-y 100
+          dtext (fn [string y]
+                  (js/text string start-x (+ start-y y)))]
+      (dtext (int (js/frameRate)) 0)
+      (dtext (:bounds-x @app-state) 10)
+      (dtext (:bounds-y @app-state) 20)
+      (dtext (str "pos: " (:pos (:player @app-state))) 30)
+      (dtext (:direction (:player @app-state)) 40)
+      (dtext (str "enemy 0: " (:enemies @app-state)) 50)
+      (dtext (str "player money: " (:money (:player @app-state))) 60)
+      (dtext (str "player health: " (:health (:player @app-state)) " / 6") 70)
+      (dtext (str "enemy bullets: "(:enemy-bullets @app-state)) 80)
+      (dtext (str (:state (:player @app-state))) 90)
+      (dtext (str "game-over?: " (:game-over? @app-state)) 100)
+      )
+    (let [start-x 100
+          start-y 100
+          dtext (fn [string y]
+                  (js/textSize 16)
+                  (js/text string start-x (+ start-y y)))]
+      (dtext (str "player health: " (:health (:player @app-state)) " / 6") 0)
+      (dtext (str "player money: " (:money (:player @app-state))) 16)))
 
   ;; (doseq [e (:enemies @app-state)]
   ;;   (swap! app-state update :enemy-bullets conj {:pos (:pos e)
@@ -934,19 +939,35 @@
                        256))))
   (spawn-room)
   (scroll-to-next-room)
-  (when (<= (:health (:player @app-state))
-           0)
-    (reset-level))
   (js/translate (+ (:scroll-x @app-state)
                    (- (- (:bounds-x @app-state) width)))
                 (+ (:scroll-y @app-state)
                    (- (- (:bounds-y @app-state) height))))
   #_(js/translate (- (- (:bounds-x @app-state) width))
                 (- (- (:bounds-y @app-state) height)))
-  (shoot)
   (draw-shop-keeper (:pos (:shop-keeper @app-state)))
   (draw-shop-keeper-items)
   (update-shop-keeper-items)
+
+  (when (<= (:health (:player @app-state))
+            0)
+    (swap! app-state assoc :enemies [])
+    (swap! app-state assoc :game-over? true))
+  (when (:game-over? @app-state)
+    (js/push)
+    (js/textSize 32)
+    (js/text "GAME OVER\npress r to restart"
+             (- (:bounds-x @app-state) (/ width 2))
+             (- (:bounds-y @app-state) (/ height 2)))
+    (js/pop))
+
+  (when (and (not (:game-over? @app-state))
+             (not= :talking
+               (-> @app-state
+                   :player
+                   :state)))
+    (player-movement))
+  (shoot)
   (draw-player (-> @app-state
                    :player
                    :pos))
@@ -980,12 +1001,8 @@
                              :state))
                   (if (>= (:dialog-index @app-state)
                           (count (:dialog character)))
-                    (do (swap! app-state
-                               assoc-in
-                               [:player :state]
-                               :not-talking)
-                        (swap! app-state
-                               assoc
+                    (do (swap! app-state assoc-in [:player :state] :not-talking)
+                        (swap! app-state assoc
                                :dialog-index
                                0))
                     (js/text (nth (:dialog character)
@@ -1012,6 +1029,10 @@
   )
 
 (defn key-pressed []
+  (when (and (:game-over? @app-state)
+             (= js/key "r"))
+    (swap! app-state assoc :game-over? false)
+    (reset-level))
   (when (= js/key "j")
     (when (= :talking
              (-> @app-state
@@ -1044,7 +1065,7 @@
   (aset "setup" setup)
   (aset "draw" draw)
   (aset "keyPressed" key-pressed)
-  (aset "mousePressed" mouse-pressed)
+  #_(aset "mousePressed" mouse-pressed)
   )
 
 (defn on-js-reload []
