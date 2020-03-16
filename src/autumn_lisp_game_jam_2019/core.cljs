@@ -961,16 +961,15 @@
              (- (:bounds-y @app-state) (/ height 2)))
     (js/pop))
 
-  (when (and (not (:game-over? @app-state))
-             (not= :talking
-               (-> @app-state
-                   :player
-                   :state)))
-    (player-movement))
-  (shoot)
-  (draw-player (-> @app-state
-                   :player
-                   :pos))
+  (when (not (:game-over? @app-state))
+    (player-movement)
+    (shoot)
+    (draw-player (-> @app-state
+                     :player
+                     :pos)))
+
+
+
 
   (update-bullets)
   (update-enemy-bullets)
