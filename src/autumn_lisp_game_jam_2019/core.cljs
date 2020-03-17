@@ -659,14 +659,18 @@
                                       :udlr-shoot
                                       :rotate-seek
                                       :sit-and-shoot]))]
-      (if (= :sit-and-shoot enemy-type)
-        (add-enemy! (- (/ width 2)
-                       (/ tile-size 2))
-                    (- (/ height 2)
-                       (/ tile-size 2))
-                    enemy-type)
-        (doseq [[x y] center-corner-positions]
-         (add-enemy! x y enemy-type))))))
+      (cond (= :sit-and-shoot enemy-type)
+            (add-enemy! (- (/ width 2)
+                           (/ tile-size 2))
+                        (- (/ height 2)
+                           (/ tile-size 2))
+                        enemy-type)
+            (= :seek enemy-type)
+            (doseq [[x y] corner-positions]
+              (add-enemy! x y enemy-type))
+            :else
+            (doseq [[x y] center-corner-positions]
+              (add-enemy! x y enemy-type))))))
 
 (defn check-enemy-tile-collision [new-enemy old-pos]
   (update new-enemy :pos (fn [new-pos]
