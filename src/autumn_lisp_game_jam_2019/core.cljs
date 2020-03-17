@@ -14,15 +14,14 @@
 (def tile-size 64)
 (def door-spawn-chance 0.5)
 (def enemy-spawn-chance 0.9)
-
-(def corner-positions [[64 64]
-                             [(- width 128) 64]
-                             [64 (- height 128)]
-                             [(- width 128) (- height 128)]])
+(def corner-positions [[tile-size tile-size]
+                       [(- width 128) tile-size]
+                       [tile-size (- height 128)]
+                       [(- width 128) (- height 128)]])
 (def center-corner-positions [[(* tile-size 2) (* tile-size 2)]
-                                    [(- width (* tile-size 3)) (* tile-size 2)]
-                                    [(* tile-size 2) (- height (* tile-size 3))]
-                                    [(- width (* tile-size 3)) (- height (* tile-size 3))]])
+                              [(- width (* tile-size 3)) (* tile-size 2)]
+                              [(* tile-size 2) (- height (* tile-size 3))]
+                              [(- width (* tile-size 3)) (- height (* tile-size 3))]])
 
 (def default-room [[1 1 1 1 1 1 1 1 1 1 1 1]
                    [1 0 0 0 0 0 0 0 0 0 0 1]
@@ -71,7 +70,8 @@
                                            :swing-start 0}
                                    :state nil}
                           :dialog-index 0
-                          :game-over? false}))
+                          :game-over? false
+                          :canvas-scale 1.0}))
 
 (defn add-image [key image]
   (swap! app-state assoc-in [:assets :images key] image))
@@ -881,7 +881,7 @@
 
 (defn setup []
    ;256 	× 	192
-  (js/createCanvas width height)
+  (js/createCanvas (* width (:canvas-scale @app-state)) (* height (:canvas-scale @app-state)))
   (js/noSmooth)
   (add-image :fantasy-tileset-image (js/loadImage "/assets/fantasy-tileset.png"))
   (add-image :player-image (js/loadImage "/assets/test-sprite.png"))
@@ -891,6 +891,7 @@
 
 (defn draw []
   (js/background 50)
+  (js/scale (:canvas-scale @app-state))
 
   (js/stroke 0 255 0)
   (js/fill 0 255 0)
@@ -1028,6 +1029,17 @@
   )
 
 (defn key-pressed []
+  ; control = 17 [ (left square bracket) = 219
+  ; ] (right square bracket) = 221
+  (when (and (js/keyIsDown 17) (js/keyIsDown 219))
+    (swap! app-state update :canvas-scale #(js/max (- % 0.1) 0.5))
+    (js/resizeCanvas (* width (:canvas-scale @app-state))
+                     (* height (:canvas-scale @app-state))))
+
+  (when (and (js/keyIsDown 17) (js/keyIsDown 221))
+    (swap! app-state update :canvas-scale #(js/min (+ % 0.1) 1.0))
+    (js/resizeCanvas (* width (:canvas-scale @app-state))
+                     (* height (:canvas-scale @app-state))))
   (when (and (:game-over? @app-state)
              (= js/key "r"))
     (swap! app-state assoc :game-over? false)
