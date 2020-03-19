@@ -79,7 +79,7 @@
             (:shoot-time (:shoot-player enemy)))
          (:interval (:shoot-player enemy)))
     (do (swap! app-state update :enemy-bullets conj {:pos (:pos enemy)
-                                                     :speed 5
+                                                     :speed 10
                                                      :direction (-> (v/add (:pos (:player @app-state))
                                                                             [32 32])
                                                                     (v/sub (:pos enemy))
