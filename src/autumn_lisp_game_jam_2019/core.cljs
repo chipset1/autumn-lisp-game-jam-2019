@@ -71,7 +71,8 @@
                                    :state nil}
                           :dialog-index 0
                           :game-over? false
-                          :canvas-scale 1.0}))
+                          :canvas-scale 1.0
+                          :health-dec-interval 300}))
 
 (defn add-image [key image]
   (swap! app-state assoc-in [:assets :images key] image))
@@ -678,6 +679,13 @@
                              old-pos
                              new-pos))))
 
+(defn dec-player-health [e]
+  (when (> (- (js/millis)
+              (:health-dec-time @app-state))
+           (:health-dec-interval @app-state))
+    (swap! app-state assoc :health-dec-time (js/millis))
+    (swap! app-state update-in [:player :health] dec)))
+
 (defn update-enemies []
   (when (and (not= :scrolling-x
                (-> @app-state
@@ -703,8 +711,10 @@
                                      (:pos (player-hit-box))
                                      (:width (player-hit-box))
                                      (:height (player-hit-box)))
-                              (do (swap! app-state update-in [:player :health] dec)
-                                  (assoc e :health 0))
+                              (do (dec-player-health e)
+                                  (if (= :do-not-die (:on-player-hit e))
+                                    e
+                                    (assoc e :health 0)))
                               (some (fn [b] (aabb? (:pos b) bullet-size (:pos e) tile-size))
                                     (:bullets @app-state))
                               (update e :health dec)

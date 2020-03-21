@@ -20,6 +20,7 @@
         {:pos pos
          :health 10
          :image-type :sorcerer
+         :on-player-hit :do-not-die
          :shoot-player {:shoot-time (js/millis)
                         :interval 1000}}
         (= :rotate-seek type)
