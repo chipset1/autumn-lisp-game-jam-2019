@@ -977,7 +977,9 @@
     (js/pop))
 
   (when (not (:game-over? @app-state))
-    (player-movement)
+    (when (not (or (= :scrolling-x (:state (:player @app-state)))
+                   (= :scrolling-y (:state (:player @app-state)))))
+      (player-movement))
     (shoot)
     (draw-player (-> @app-state
                      :player
