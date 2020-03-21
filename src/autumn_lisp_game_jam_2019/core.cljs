@@ -169,6 +169,16 @@
                   (* 22 32)
                   32
                   32)
+        (= :eye-monster type)
+        (js/image (image :fantasy-tileset-image)
+                  x
+                  y
+                  tile-size
+                  tile-size
+                  (* 7 32)
+                  (* 21 32)
+                  32
+                  32)
         :else
         (js/image (image :fantasy-tileset-image)
                   x
@@ -658,19 +668,24 @@
                                       :udlr
                                       :udlr-shoot
                                       :rotate-seek
-                                      :sit-and-shoot]))]
-      (cond (= :sit-and-shoot enemy-type)
-            (add-enemy! (- (/ width 2)
-                           (/ tile-size 2))
-                        (- (/ height 2)
-                           (/ tile-size 2))
-                        enemy-type)
-            (= :seek enemy-type)
-            (doseq [[x y] corner-positions]
-              (add-enemy! x y enemy-type))
-            :else
-            (doseq [[x y] center-corner-positions]
-              (add-enemy! x y enemy-type))))))
+                                      :sit-and-shoot
+                                      :rotate-and-shoot]))]
+      (cond  (= :rotate-and-shoot enemy-type)
+             (add-enemy! (/ width 2)
+                         (- (/ height 2) 150)
+                         enemy-type)
+             (= :sit-and-shoot enemy-type)
+             (add-enemy! (- (/ width 2)
+                            (/ tile-size 2))
+                         (- (/ height 2)
+                            (/ tile-size 2))
+                         enemy-type)
+             (= :seek enemy-type)
+             (doseq [[x y] corner-positions]
+               (add-enemy! x y enemy-type))
+             :else
+             (doseq [[x y] center-corner-positions]
+               (add-enemy! x y enemy-type))))))
 
 (defn check-enemy-tile-collision [new-enemy old-pos]
   (update new-enemy :pos (fn [new-pos]

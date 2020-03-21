@@ -16,13 +16,24 @@
   (first (shuffle enemy-directions)))
 
 (defn create-enemy [pos type]
-  (cond (= :sit-and-shoot type)
+  (cond (= :rotate-and-shoot type)
+        {:pos pos
+         :health 20
+         :image-type :eye-monster
+         :on-player-hit :do-not-die
+         :rotate {:radius 4
+                  :theta 0
+                  :theta-vel 0.03}
+         :shoot-player {:shoot-time (js/millis)
+                        :speed 3
+                        :interval 500}}
+        (= :sit-and-shoot type)
         {:pos pos
          :health 10
          :image-type :sorcerer
          :on-player-hit :do-not-die
          :shoot-player {:shoot-time (js/millis)
-                        :speed 15
+                        :speed 20
                         :interval 1000}}
         (= :rotate-seek type)
         {:pos pos
