@@ -50,7 +50,7 @@
                           :tile-map default-room
                           :tile-map-previous default-room
                           :scroll-start-time 0
-                          :scroll-interval 250
+                          :scroll-interval 350
                           :scroll-target-min-x 0
                           :scroll-target-min-y 0
                           :scroll-x 0
