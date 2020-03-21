@@ -653,8 +653,7 @@
                              type)))
 
 (defn spawn-enemies []
-  (when (and (not (dungeon/room-has-one-door? (:tile-map @app-state)))
-             (< (js/random) enemy-spawn-chance))
+  (when (not (dungeon/room-has-one-door? (:tile-map @app-state)))
     (let [enemy-type (first (shuffle [:seek
                                       :udlr
                                       :udlr-shoot
