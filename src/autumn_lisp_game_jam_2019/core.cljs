@@ -181,7 +181,7 @@
                   32)))
 
 (defn draw-enemy [e]
-  (js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
+  #_(js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
   (draw-enemy-image (:pos e) (:image-type e)))
 
 
