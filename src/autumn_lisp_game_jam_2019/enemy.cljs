@@ -47,7 +47,7 @@
          :health 3
          :image-type :skeleton
          :udlr {:move-time (js/millis)
-                :speed 3
+                :speed 4.5
                 :move-interval 400
                 :current-direction (random-direction)}}
         (= :seek type)
