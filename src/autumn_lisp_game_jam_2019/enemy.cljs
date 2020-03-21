@@ -22,6 +22,7 @@
          :image-type :sorcerer
          :on-player-hit :do-not-die
          :shoot-player {:shoot-time (js/millis)
+                        :speed 15
                         :interval 1000}}
         (= :rotate-seek type)
         {:pos pos
@@ -80,7 +81,7 @@
             (:shoot-time (:shoot-player enemy)))
          (:interval (:shoot-player enemy)))
     (do (swap! app-state update :enemy-bullets conj {:pos (:pos enemy)
-                                                     :speed 10
+                                                     :speed (:speed (:shoot-player enemy))
                                                      :direction (-> (v/add (:pos (:player @app-state))
                                                                             [32 32])
                                                                     (v/sub (:pos enemy))
