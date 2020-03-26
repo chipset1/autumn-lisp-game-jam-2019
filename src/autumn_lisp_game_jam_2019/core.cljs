@@ -569,40 +569,28 @@
   )
 
 (defn shift-left []
-  (swap! app-state
-         assoc-in
-         [:player :state]
-         :scrolling-x)
+  (swap! app-state assoc-in [:player :state] :scrolling-x)
   (swap! app-state assoc :scroll-target-min-y 0)
   (swap! app-state assoc :scroll-target-min-x width)
   (swap! app-state assoc :scroll-start-time (js/millis))
   )
 
 (defn shift-right []
-  (swap! app-state
-         assoc-in
-         [:player :state]
-         :scrolling-x)
+  (swap! app-state assoc-in [:player :state] :scrolling-x)
   (swap! app-state assoc :scroll-target-min-y 0)
   (swap! app-state assoc :scroll-target-min-x (- width))
   (swap! app-state assoc :scroll-start-time (js/millis))
   )
 
 (defn shift-up []
-  (swap! app-state
-         assoc-in
-         [:player :state]
-         :scrolling-y)
+  (swap! app-state assoc-in [:player :state] :scrolling-y)
   (swap! app-state assoc :scroll-target-min-x 0)
   (swap! app-state assoc :scroll-target-min-y height)
   (swap! app-state assoc :scroll-start-time (js/millis))
   )
 
 (defn shift-down []
-  (swap! app-state
-         assoc-in
-         [:player :state]
-         :scrolling-y)
+  (swap! app-state assoc-in [:player :state] :scrolling-y)
   (swap! app-state assoc :scroll-target-min-x 0)
   (swap! app-state assoc :scroll-target-min-y (- height))
   (swap! app-state assoc :scroll-start-time (js/millis))
