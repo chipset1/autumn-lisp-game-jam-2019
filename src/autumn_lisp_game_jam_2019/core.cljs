@@ -464,7 +464,7 @@
                              (:pos (player-hit-box))
                              (:width (player-hit-box))
                              (:height (player-hit-box)))
-                  (swap! app-state update-in [:player :health] dec)))
+                  (dec-player-health b)))
               (:enemy-bullets @app-state)))
   (swap! app-state
          update
