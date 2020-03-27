@@ -973,9 +973,9 @@
   (when (:game-over? @app-state)
     (js/push)
     (js/textSize 32)
-    (js/text "GAME OVER\npress r to restart"
-             (- (:bounds-x @app-state) (/ width 2))
-             (- (:bounds-y @app-state) (/ height 2)))
+    (js/text "  GAME OVER\npress r to restart"
+             (- (:bounds-x @app-state) (/ width 2) 100)
+             (- (:bounds-y @app-state) (/ height 2) 20))
     (js/pop))
 
   (when (not (:game-over? @app-state))
