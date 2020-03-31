@@ -72,7 +72,8 @@
                           :dialog-index 0
                           :game-over? false
                           :canvas-scale 1.0
-                          :health-dec-interval 300}))
+                          :health-dec-interval 1000
+                          :invulnerable-flash-interval 125}))
 
 (defn add-image [key image]
   (swap! app-state assoc-in [:assets :images key] image))
@@ -97,15 +98,32 @@
             y
             player-size
             player-size)
-  (js/image (image :fantasy-tileset-image)
-            x
-            y
-            player-size
-            player-size
-            32
-            (* 20 32)
-            32
-            32))
+
+  (if (< (- (js/millis)
+              (:health-dec-time @app-state))
+           (:health-dec-interval @app-state))
+    (when (> (- (js/millis)
+                (:invulnerable-flash-time @app-state))
+             (:invulnerable-flash-interval @app-state))
+      (swap! app-state assoc :invulnerable-flash-time (js/millis))
+      (js/image (image :fantasy-tileset-image)
+                x
+                y
+                player-size
+                player-size
+                32
+                (* 20 32)
+                32
+                32))
+    (js/image (image :fantasy-tileset-image)
+              x
+              y
+              player-size
+              player-size
+              32
+              (* 20 32)
+              32
+              32)))
 
 (defn draw-character [[x y]]
   (js/image (image :fantasy-tileset-image)
@@ -456,6 +474,13 @@
       (< (v/y pos)
          (- (:bounds-y @app-state) height))))
 
+(defn dec-player-health [e]
+  (when (> (- (js/millis)
+              (:health-dec-time @app-state))
+           (:health-dec-interval @app-state))
+    (swap! app-state assoc :health-dec-time (js/millis))
+    (swap! app-state update-in [:player :health] dec)))
+
 (defn update-enemy-bullets []
   (doall (map (fn [b]
                 (when (aabb? (:pos b)
@@ -681,13 +706,6 @@
                              old-pos
                              new-pos))))
 
-(defn dec-player-health [e]
-  (when (> (- (js/millis)
-              (:health-dec-time @app-state))
-           (:health-dec-interval @app-state))
-    (swap! app-state assoc :health-dec-time (js/millis))
-    (swap! app-state update-in [:player :health] dec)))
-
 (defn update-enemies []
   (when (and (not= :scrolling-x
                (-> @app-state
@@ -894,7 +912,6 @@
                   :shop-keeper
                   :items))))
 
-
 (defn setup []
    ;256 	× 	192
   (js/createCanvas (* width (:canvas-scale @app-state)) (* height (:canvas-scale @app-state)))
@@ -965,7 +982,6 @@
   (draw-shop-keeper (:pos (:shop-keeper @app-state)))
   (draw-shop-keeper-items)
   (update-shop-keeper-items)
-
   (when (<= (:health (:player @app-state))
             0)
     (swap! app-state assoc :enemies [])
