@@ -1,16 +1,11 @@
 (ns autumn-lisp-game-jam-2019.enemy
-  (:require [autumn-lisp-game-jam-2019.vector :as v]))
+  (:require [autumn-lisp-game-jam-2019.vector :as v]
+            [autumn-lisp-game-jam-2019.util :as u]))
 
 (def enemy-directions [[0 1]
                        [0 -1]
                        [1 0]
                        [-1 0]])
-
-(defn if-update
-   [x pred f]
-  (if (pred x)
-    (f x)
-    x))
 
 (defn random-direction []
   (first (shuffle enemy-directions)))
@@ -107,9 +102,9 @@
   ;;                          (v/mult-vec [4 0])
   ;;                          (v/add %)))
   (-> enemy
-      (if-update :shoot-player (fn [e]
+      (u/if-update :shoot-player (fn [e]
                                  (shoot-player app-state e)))
-      (if-update :rotate (fn [e]
+      (u/if-update :rotate (fn [e]
                            (let [{:keys [radius
                                          theta
                                          theta-vel]} (:rotate e)]
@@ -119,13 +114,13 @@
                                                      (+ (v/y (:pos e))
                                                         (* radius (js/sin theta)))))
                                  (update-in [:rotate :theta] #(+ % theta-vel))))))
-      (if-update :random-shoot (fn [e]
+      (u/if-update :random-shoot (fn [e]
                                  (shoot-update app-state e)))
-      (if-update :udlr (fn [e]
+      (u/if-update :udlr (fn [e]
                          (udlr-update-move-time (update e :pos #(->> (v/mult (:speed (:udlr enemy))
                                                                             (:current-direction (:udlr enemy)))
                                                                      (v/add %))))))
-      (if-update :seek (fn [e]
+      (u/if-update :seek (fn [e]
                          (update e :pos #(->> (v/sub (:pos (:player @app-state)) %)
                                                  (v/normalize)
                                                  (v/mult (:speed (:seek enemy)))

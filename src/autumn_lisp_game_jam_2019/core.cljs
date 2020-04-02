@@ -1,7 +1,9 @@
 (ns autumn-lisp-game-jam-2019.core
   (:require [autumn-lisp-game-jam-2019.vector :as v]
             [autumn-lisp-game-jam-2019.enemy :as enemy]
-            [autumn-lisp-game-jam-2019.dungeon :as dungeon]))
+            [autumn-lisp-game-jam-2019.dungeon :as dungeon]
+            [autumn-lisp-game-jam-2019.particle :as particle]
+            ))
 
 (enable-console-print!)
 
@@ -39,6 +41,7 @@
                                                  "go find a way out of the dungeon"]
                                         :type :character}
                                        ]
+                          :particles []
                           :enemies []
                           :enemy-bullets []
                           :assets {:images {:fantasy-tileset-image nil}}
@@ -479,9 +482,17 @@
               (:health-dec-time @app-state))
            (:health-dec-interval @app-state))
     (swap! app-state assoc :health-dec-time (js/millis))
-    (swap! app-state update-in [:player :health] dec)))
+    (swap! app-state update-in [:player :health] #(js/max (dec %) 0))))
+
+(defn bullet-particles []
+  (doall (map (fn [b]
+                (when (or (tile-map-collision? (:pos b) bullet-size)
+                          (bullet-hit-enemy? b))
+                  (particle/bullet-explode app-state (:pos b))))
+              (:bullets @app-state))))
 
 (defn update-enemy-bullets []
+  ;; (bullet-particles :enemy-bullets)
   (doall (map (fn [b]
                 (when (aabb? (:pos b)
                              bullet-size
@@ -502,7 +513,7 @@
                                       (:pos (player-hit-box))
                                       (:width (player-hit-box))
                                       (:height (player-hit-box)))
-                               (tile-map-collision? (:pos b) 10)))))
+                               (tile-map-collision? (:pos b) bullet-size)))))
   (swap! app-state
          update
          :enemy-bullets
@@ -514,13 +525,14 @@
                 bullets))))
 
 (defn update-bullets []
+  (bullet-particles)
   (swap! app-state
          update
          :bullets
          (partial remove (fn [b]
                            (or (out-of-room? (:pos b))
                                (bullet-hit-enemy? b)
-                               (tile-map-collision? (:pos b) 10)))))
+                               (tile-map-collision? (:pos b) bullet-size)))))
   (swap! app-state
          update
          :bullets
@@ -912,6 +924,13 @@
                   :shop-keeper
                   :items))))
 
+(defn update-particles []
+  (swap! app-state update :particles (partial remove particle/is-dead))
+  (swap! app-state update :particles (partial map particle/update-particle)))
+
+(defn draw-particles []
+  (doall (map particle/draw-particle (:particles @app-state))))
+
 (defn setup []
    ;256 	× 	192
   (js/createCanvas (* width (:canvas-scale @app-state)) (* height (:canvas-scale @app-state)))
@@ -979,6 +998,9 @@
                    (- (- (:bounds-y @app-state) height))))
   #_(js/translate (- (- (:bounds-x @app-state) width))
                 (- (- (:bounds-y @app-state) height)))
+
+  (update-particles)
+  (draw-particles)
   (draw-shop-keeper (:pos (:shop-keeper @app-state)))
   (draw-shop-keeper-items)
   (update-shop-keeper-items)
@@ -1002,16 +1024,13 @@
     (draw-player (-> @app-state
                      :player
                      :pos)))
-
-
-
-
   (update-bullets)
   (update-enemy-bullets)
   (display-bullets :bullets)
   (display-bullets :enemy-bullets)
   ;; (swing-sword)
 
+  (update-enemies)
   (doall (map (fn [character]
                 (js/stroke 0 255 0)
                 (js/fill 0 255 0)
@@ -1045,7 +1064,6 @@
                              (+ (v/y (:pos character))
                                 74)))))
               (:characters @app-state)))
-  (update-enemies)
   (doall (map #(draw-enemy %)
               (:enemies @app-state)))
   (doall (map #(draw-character (:pos %))
