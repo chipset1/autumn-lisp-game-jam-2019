@@ -7,11 +7,27 @@
                        [1 0]
                        [-1 0]])
 
+(def enemy-diagonal-directions [[1 1]
+                                [1 -1]
+                                [-1 1]
+                                [-1 -1]])
+
 (defn random-direction []
   (first (shuffle enemy-directions)))
 
+(defn random-diagonal-direction []
+  (first (shuffle enemy-diagonal-directions)))
+
 (defn create-enemy [pos type]
-  (cond (= :rotate-and-shoot type)
+  (cond (= :diagonal-move type)
+        {:pos pos
+         :health 3
+         :image-type :spider
+         :diagonal-move {:interval 500
+                         :speed 4
+                         :current-direction (random-diagonal-direction)
+                         :move-time (js/millis)}}
+        (= :rotate-and-shoot type)
         {:pos pos
          :health 20
          :image-type :eye-monster
@@ -96,12 +112,25 @@
     enemy)
   )
 
+(defn diagonal-move-update [enemy]
+  (if (> (- (js/millis)
+            (:move-time (:diagonal-move enemy)))
+         (:interval (:diagonal-move enemy)))
+    (-> enemy
+        (assoc-in [:diagonal-move :move-time] (js/millis))
+        (assoc-in [:diagonal-move :current-direction] (random-diagonal-direction)))
+    enemy))
+
 (defn update-enemy [app-state enemy]
   ;; (update enemy :pos #(->> (v/sub (:pos (:player @app-state)) %)
   ;;                          (v/normalize)
   ;;                          (v/mult-vec [4 0])
   ;;                          (v/add %)))
   (-> enemy
+      (u/if-update :diagonal-move (fn [e]
+                                    (diagonal-move-update (update enemy :pos #(->> (v/mult (:speed (:diagonal-move e))
+                                                                                    (:current-direction (:diagonal-move e)))
+                                                                            (v/add %))))))
       (u/if-update :shoot-player (fn [e]
                                  (shoot-player app-state e)))
       (u/if-update :rotate (fn [e]

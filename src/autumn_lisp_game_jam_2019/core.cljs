@@ -140,7 +140,17 @@
             32))
 
 (defn draw-enemy-image [[x y] type]
-  (cond (= :archer type)
+  (cond (= :spider type)
+        (js/image (image :fantasy-tileset-image)
+                  x
+                  y
+                  tile-size
+                  tile-size
+                  (* 3 32)
+                  (* 19 32)
+                  32
+                  32)
+        (= :archer type)
         (js/image (image :fantasy-tileset-image)
                   x
                   y
@@ -691,6 +701,7 @@
   (when (not (dungeon/room-has-one-door? (:tile-map @app-state)))
     (let [enemy-type (first (shuffle [:seek
                                       :udlr
+                                      :diagonal-move
                                       :udlr-shoot
                                       :rotate-seek
                                       :sit-and-shoot
