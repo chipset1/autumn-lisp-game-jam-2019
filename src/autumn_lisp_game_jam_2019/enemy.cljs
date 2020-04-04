@@ -144,10 +144,10 @@
                                                         (* radius (js/sin theta)))))
                                  (update-in [:rotate :theta] #(+ % theta-vel))))))
       (u/if-update :random-shoot (fn [e]
-                                 (random-shoot-update app-state e)))
+                                   (random-shoot-update app-state e)))
       (u/if-update :udlr (fn [e]
-                         (udlr-update-move-time (update e :pos #(->> (v/mult (:speed (:udlr enemy))
-                                                                            (:current-direction (:udlr enemy)))
+                         (udlr-update-move-time (update e :pos #(->> (v/mult (:speed (:udlr e))
+                                                                            (:current-direction (:udlr e)))
                                                                      (v/add %))))))
       (u/if-update :seek (fn [e]
                          (update e :pos #(->> (v/sub (:pos (:player @app-state)) %)
