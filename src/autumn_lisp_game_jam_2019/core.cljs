@@ -729,6 +729,16 @@
                              old-pos
                              new-pos))))
 
+(defn enemy-out-of-room? [pos]
+  (or (> (v/x pos)
+         (:bounds-x @app-state))
+      (< (v/x pos)
+         (- (:bounds-x @app-state) width tile-size))
+      (> (v/y pos)
+         (:bounds-y @app-state))
+      (< (v/y pos)
+         (- (:bounds-y @app-state) height tile-size))))
+
 (defn update-enemies []
   (when (and (not= :scrolling-x
                (-> @app-state
@@ -770,7 +780,8 @@
          update
          :enemies
          (partial remove (fn [e]
-                           (<= (:health e) 0))))
+                           (or (enemy-out-of-room? (:pos e))
+                               (<= (:health e) 0)))))
   )
 
 
