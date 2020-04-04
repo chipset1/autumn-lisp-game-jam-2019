@@ -72,7 +72,7 @@
         (assoc-in [:udlr :current-direction] (random-direction)))
     enemy))
 
-(defn shoot-update [app-state enemy]
+(defn random-shoot-update [app-state enemy]
   (if (> (- (js/millis)
               (:shoot-time (:random-shoot enemy)))
            (:interval (:random-shoot enemy)))
@@ -115,7 +115,7 @@
                                                         (* radius (js/sin theta)))))
                                  (update-in [:rotate :theta] #(+ % theta-vel))))))
       (u/if-update :random-shoot (fn [e]
-                                 (shoot-update app-state e)))
+                                 (random-shoot-update app-state e)))
       (u/if-update :udlr (fn [e]
                          (udlr-update-move-time (update e :pos #(->> (v/mult (:speed (:udlr enemy))
                                                                             (:current-direction (:udlr enemy)))
