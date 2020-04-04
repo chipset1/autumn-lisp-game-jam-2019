@@ -76,7 +76,8 @@
                           :game-over? false
                           :canvas-scale 1.0
                           :health-dec-interval 1000
-                          :invulnerable-flash-interval 125}))
+                          :invulnerable-flash-interval 125
+                          :enemy-index -1}))
 
 (defn add-image [key image]
   (swap! app-state assoc-in [:assets :images key] image))
@@ -699,13 +700,14 @@
 
 (defn spawn-enemies []
   (when (not (dungeon/room-has-one-door? (:tile-map @app-state)))
-    (let [enemy-type (first (shuffle [:seek
-                                      :udlr
-                                      :diagonal-move
-                                      :udlr-shoot
-                                      :rotate-seek
-                                      :sit-and-shoot
-                                      :rotate-and-shoot]))]
+    (let [enemy-type (get [:seek
+                           :udlr
+                           :diagonal-move
+                           :rotate-seek
+                           :udlr-shoot
+                           :sit-and-shoot
+                           :rotate-and-shoot]
+                          (:enemy-index @app-state))]
       (cond  (= :rotate-and-shoot enemy-type)
              (add-enemy! (/ width 2)
                          (- (/ height 2) 150)
@@ -819,6 +821,9 @@
   (swap! app-state assoc :tile-map default-room))
 
 (defn after-room-spawn []
+  (when (and (not (dungeon/room-has-one-door? (:tile-map @app-state)))
+             (<= (count (:enemies @app-state)) 0))
+    (swap! app-state update :enemy-index inc))
   (swap! app-state assoc :enemies [])
   (spawn-enemies)
   (spawn-shop-keeper))
@@ -893,6 +898,7 @@
   (swap! app-state assoc-in [:player :health] (:max-health (:player @app-state)))
   (swap! app-state assoc-in [:player :money] 0)
   (swap! app-state assoc :enemies [])
+  (swap! app-state assoc :enemy-index -1)
   (swap! app-state
          assoc-in
          [:player :pos]
@@ -985,6 +991,7 @@
       (dtext (str "enemy bullets: "(:enemy-bullets @app-state)) 80)
       (dtext (str (:state (:player @app-state))) 90)
       (dtext (str "game-over?: " (:game-over? @app-state)) 100)
+      (dtext (str "enemy-index: " (:enemy-index @app-state)) 110)
       )
     (let [start-x 100
           start-y 100
