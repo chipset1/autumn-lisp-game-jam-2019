@@ -18,10 +18,14 @@
 (defn random-diagonal-direction []
   (first (shuffle enemy-diagonal-directions)))
 
-(defn create-enemy [pos type]
+(defn defaults [app-state enemy]
+  (-> enemy
+      (u/if-not-update :health #(assoc % :health 3))
+      (u/if-not-update :size #(assoc % :size (:enemy-size @app-state)))))
+
+(defn create-enemy [app-state pos type]
   (cond (= :diagonal-move type)
         {:pos pos
-         :health 3
          :image-type :spider
          :diagonal-move {:interval 500
                          :speed 4
@@ -29,9 +33,10 @@
                          :move-time (js/millis)}}
         (= :rotate-and-shoot type)
         {:pos pos
-         :health 20
+         :health 100
          :image-type :eye-monster
          :on-player-hit :do-not-die
+         :size (* (:enemy-size @app-state) 2)
          :rotate {:radius 4
                   :theta 0
                   :theta-vel 0.03}
@@ -48,7 +53,6 @@
                         :interval 1000}}
         (= :rotate-seek type)
         {:pos pos
-         :health 3
          :image-type :ghoul
          :seek {:speed 1}
          :rotate {:radius 4
@@ -56,7 +60,6 @@
                   :theta-vel 0.03}}
         (= :udlr-shoot type)
         {:pos pos
-         :health 3
          :image-type :archer
          :udlr {:move-time (js/millis)
                 :speed 3
@@ -67,7 +70,6 @@
                         :interval 1000}}
         (= :udlr type)
         {:pos pos
-         :health 3
          :image-type :skeleton
          :udlr {:move-time (js/millis)
                 :speed 4.5
@@ -75,7 +77,6 @@
                 :current-direction (random-direction)}}
         (= :seek type)
         {:pos pos
-         :health 3
          :image-type :hedge-hog
          :seek {:speed 2}}))
 

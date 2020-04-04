@@ -77,7 +77,8 @@
                           :canvas-scale 1.0
                           :health-dec-interval 1000
                           :invulnerable-flash-interval 125
-                          :enemy-index -1}))
+                          :enemy-index -1
+                          :enemy-size tile-size}))
 
 (defn add-image [key image]
   (swap! app-state assoc-in [:assets :images key] image))
@@ -140,13 +141,13 @@
             32
             32))
 
-(defn draw-enemy-image [[x y] type]
+(defn draw-enemy-image [[x y] size type]
   (cond (= :spider type)
         (js/image (image :fantasy-tileset-image)
                   x
                   y
-                  tile-size
-                  tile-size
+                  size
+                  size
                   (* 3 32)
                   (* 19 32)
                   32
@@ -155,8 +156,8 @@
         (js/image (image :fantasy-tileset-image)
                   x
                   y
-                  tile-size
-                  tile-size
+                  size
+                  size
                   (* 4 32)
                   (* 18 32)
                   32
@@ -165,8 +166,8 @@
         (js/image (image :fantasy-tileset-image)
                   x
                   y
-                  tile-size
-                  tile-size
+                  size
+                  size
                   (* 6 32)
                   (* 21 32)
                   32
@@ -175,8 +176,8 @@
         (js/image (image :fantasy-tileset-image)
                   x
                   y
-                  tile-size
-                  tile-size
+                  size
+                  size
                   (* 6 32)
                   (* 18 32)
                   32
@@ -185,8 +186,8 @@
         (js/image (image :fantasy-tileset-image)
                   x
                   y
-                  tile-size
-                  tile-size
+                  size
+                  size
                   (* 6 32)
                   (* 20 32)
                   32
@@ -195,8 +196,8 @@
         (js/image (image :fantasy-tileset-image)
                   x
                   y
-                  tile-size
-                  tile-size
+                  size
+                  size
                   (* 2 32)
                   (* 22 32)
                   32
@@ -205,8 +206,8 @@
         (js/image (image :fantasy-tileset-image)
                   x
                   y
-                  tile-size
-                  tile-size
+                  size
+                  size
                   (* 7 32)
                   (* 21 32)
                   32
@@ -215,16 +216,16 @@
         (js/image (image :fantasy-tileset-image)
                   x
                   y
-                  tile-size
-                  tile-size
+                  size
+                  size
                   (* 2 32)
                   (* 22 32)
                   32
                   32)))
 
 (defn draw-enemy [e]
-  #_(js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
-  (draw-enemy-image (:pos e) (:image-type e)))
+  (js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
+  (draw-enemy-image (:pos e) (:size e) (:image-type e)))
 
 
 
@@ -453,7 +454,7 @@
          {:pos (v/add (-> @app-state
                           :player
                           :pos)
-                      [32 32])
+                      [(/ tile-size 2) (/ tile-size 2)])
           :direction dir}))
 
 (defn shoot []
@@ -461,21 +462,22 @@
               (:bullet-last-time @app-state))
            (:bullet-interval @app-state))
     (swap! app-state assoc :bullet-last-time (js/millis))
-    (cond (and (js/keyIsDown js/UP_ARROW) (js/keyIsDown js/LEFT_ARROW)) (shoot-direction [-1 -1])
-          (and (js/keyIsDown js/UP_ARROW) (js/keyIsDown js/RIGHT_ARROW)) (shoot-direction [1 -1])
-          (and (js/keyIsDown js/DOWN_ARROW) (js/keyIsDown js/LEFT_ARROW)) (shoot-direction [-1 1])
-          (and (js/keyIsDown js/DOWN_ARROW) (js/keyIsDown js/RIGHT_ARROW)) (shoot-direction [1 1])
-          (js/keyIsDown js/UP_ARROW) (shoot-direction [0 -1])
-          (js/keyIsDown js/DOWN_ARROW) (shoot-direction [0 1])
-          (js/keyIsDown js/LEFT_ARROW) (shoot-direction [-1 0])
-          (js/keyIsDown js/RIGHT_ARROW) (shoot-direction [1 0]))))
+    (let [kd js/keyIsDown]
+      (cond (and (kd js/UP_ARROW) (kd js/LEFT_ARROW)) (shoot-direction [-1 -1])
+           (and (kd js/UP_ARROW) (kd js/RIGHT_ARROW)) (shoot-direction [1 -1])
+           (and (kd js/DOWN_ARROW) (kd js/LEFT_ARROW)) (shoot-direction [-1 1])
+           (and (kd js/DOWN_ARROW) (kd js/RIGHT_ARROW)) (shoot-direction [1 1])
+           (kd js/UP_ARROW) (shoot-direction [0 -1])
+           (kd js/DOWN_ARROW) (shoot-direction [0 1])
+           (kd js/LEFT_ARROW) (shoot-direction [-1 0])
+           (kd js/RIGHT_ARROW) (shoot-direction [1 0])))))
 
 (defn bullet-hit-enemy? [b]
   (some (fn [e]
           (aabb? (:pos b)
                  bullet-size
                  (:pos e)
-                 tile-size))
+                 (:size e)))
         (:enemies @app-state)))
 
 (defn out-of-room? [pos]
@@ -692,54 +694,57 @@
          update
          :enemies
          conj
-         (enemy/create-enemy [(+ (- (:bounds-x @app-state) width)
-                                 screen-x)
-                              (+ (- (:bounds-y @app-state) height)
-                                 screen-y)]
-                             type)))
+         (->> (enemy/create-enemy app-state
+                                  [(+ (- (:bounds-x @app-state) width)
+                                      screen-x)
+                                   (+ (- (:bounds-y @app-state) height)
+                                      screen-y)]
+                                  type)
+              (enemy/defaults app-state))))
 
 (defn spawn-enemies []
-  (when (not (dungeon/room-has-one-door? (:tile-map @app-state)))
-    (let [enemy-type (get [:seek
-                           :udlr
-                           :diagonal-move
-                           :rotate-seek
-                           :udlr-shoot
-                           :sit-and-shoot
-                           :rotate-and-shoot]
-                          (:enemy-index @app-state))]
-      (cond  (= :rotate-and-shoot enemy-type)
-             (add-enemy! (/ width 2)
-                         (- (/ height 2) 150)
-                         enemy-type)
-             (= :sit-and-shoot enemy-type)
-             (add-enemy! (- (/ width 2)
-                            (/ tile-size 2))
-                         (- (/ height 2)
-                            (/ tile-size 2))
-                         enemy-type)
-             (= :seek enemy-type)
-             (doseq [[x y] corner-positions]
-               (add-enemy! x y enemy-type))
-             :else
-             (doseq [[x y] center-corner-positions]
-               (add-enemy! x y enemy-type))))))
+  (let [enemy-type :rotate-and-shoot
+        #_(get [:seek
+                         :udlr
+                         :diagonal-move
+                         :rotate-seek
+                         :udlr-shoot
+                         :sit-and-shoot
+                         :rotate-and-shoot]
+                        (:enemy-index @app-state))]
+    (cond  (= :rotate-and-shoot enemy-type)
+           (add-enemy! (- (/ width 2) 64)
+                       (- (/ height 2)
+                          150
+                          (/ (:enemy-size @app-state) 4))
+                       enemy-type)
+           (= :sit-and-shoot enemy-type)
+           (add-enemy! (- (/ width 2)
+                          (/ (:enemy-size app-state) 2))
+                       (- (/ height 2)
+                          (/ (:enemy-size app-state) 2))
+                       enemy-type)
+           (= :seek enemy-type)
+           (doseq [[x y] corner-positions]
+             (add-enemy! x y enemy-type))
+           :else
+           (doseq [[x y] center-corner-positions]
+             (add-enemy! x y enemy-type)))))
 
 (defn check-enemy-tile-collision [new-enemy old-pos]
   (update new-enemy :pos (fn [new-pos]
-                           (if (tile-map-collision? new-pos tile-size)
+                           (if (tile-map-collision? new-pos (:size new-enemy))
                              old-pos
                              new-pos))))
 
-(defn enemy-out-of-room? [pos]
-  (or (> (v/x pos)
-         (:bounds-x @app-state))
-      (< (v/x pos)
-         (- (:bounds-x @app-state) width tile-size))
-      (> (v/y pos)
-         (:bounds-y @app-state))
-      (< (v/y pos)
-         (- (:bounds-y @app-state) height tile-size))))
+(defn enemy-out-of-room? [enemy]
+  (let [x (v/x (:pos enemy))
+        y (v/y (:pos enemy))
+        size (:size enemy)]
+    (or (> x (:bounds-x @app-state))
+        (< x (- (:bounds-x @app-state) width size))
+        (> y (:bounds-y @app-state))
+        (< y (- (:bounds-y @app-state) height size)))))
 
 (defn update-enemies []
   (when (and (not= :scrolling-x
@@ -761,8 +766,8 @@
          :enemies
          (partial map (fn [e]
                         (cond (aabb? (:pos e)
-                                     tile-size
-                                     tile-size
+                                     (:size e)
+                                     (:size e)
                                      (:pos (player-hit-box))
                                      (:width (player-hit-box))
                                      (:height (player-hit-box)))
@@ -770,7 +775,7 @@
                                   (if (= :do-not-die (:on-player-hit e))
                                     e
                                     (assoc e :health 0)))
-                              (some (fn [b] (aabb? (:pos b) bullet-size (:pos e) tile-size))
+                              (some (fn [b] (aabb? (:pos b) bullet-size (:pos e) (:size e)))
                                     (:bullets @app-state))
                               (update e :health dec)
                               :else e))))
@@ -782,7 +787,7 @@
          update
          :enemies
          (partial remove (fn [e]
-                           (or (enemy-out-of-room? (:pos e))
+                           (or (enemy-out-of-room? e)
                                (<= (:health e) 0)))))
   )
 
@@ -821,12 +826,10 @@
   (swap! app-state assoc :tile-map default-room))
 
 (defn after-room-spawn []
-  (when (and (not (dungeon/room-has-one-door? (:tile-map @app-state)))
-             (<= (count (:enemies @app-state)) 0))
+  (when (<= (count (:enemies @app-state)) 0)
     (swap! app-state update :enemy-index inc))
   (swap! app-state assoc :enemies [])
-  (spawn-enemies)
-  (spawn-shop-keeper))
+  (spawn-enemies))
 
 (defn spawn-room
   "update bounds, reset tile-map to default room, create door where entered, randomly create other doors"
@@ -1030,9 +1033,9 @@
 
   (update-particles)
   (draw-particles)
-  (draw-shop-keeper (:pos (:shop-keeper @app-state)))
-  (draw-shop-keeper-items)
-  (update-shop-keeper-items)
+  ;; (draw-shop-keeper (:pos (:shop-keeper @app-state)))
+  ;; (draw-shop-keeper-items)
+  ;; (update-shop-keeper-items)
   (when (<= (:health (:player @app-state))
             0)
     (swap! app-state assoc :enemies [])
