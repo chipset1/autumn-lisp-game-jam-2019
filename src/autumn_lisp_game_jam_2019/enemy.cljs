@@ -40,15 +40,21 @@
          :rotate {:radius 4
                   :theta 0
                   :theta-vel 0.03}
-         :shoot-player {:shoot-time (js/millis)
-                        :speed 3
-                        :interval 500}}
+         :shoot-player [{:shoot-time (js/millis)
+                         :offset [0 0]
+                         :speed 2
+                         :interval 800}
+                        {:shoot-time (js/millis)
+                         :offset [128 128]
+                         :speed 2
+                         :interval 800}]}
         (= :sit-and-shoot type)
         {:pos pos
          :health 10
          :image-type :sorcerer
          :on-player-hit :do-not-die
          :shoot-player {:shoot-time (js/millis)
+                        :offset [0 0]
                         :speed 20
                         :interval 1000}}
         (= :rotate-seek type)
@@ -99,11 +105,14 @@
         (assoc-in enemy [:random-shoot :shoot-time] (js/millis)))
     enemy))
 
+
+
 (defn shoot-player [app-state enemy]
   (if (> (- (js/millis)
             (:shoot-time (:shoot-player enemy)))
          (:interval (:shoot-player enemy)))
-    (do (swap! app-state update :enemy-bullets conj {:pos (:pos enemy)
+    (do (swap! app-state update :enemy-bullets conj {:pos (v/add (:pos enemy)
+                                                                 (:offset (:shoot-player enemy)))
                                                      :speed (:speed (:shoot-player enemy))
                                                      :direction (-> (v/add (:pos (:player @app-state))
                                                                             [32 32])
@@ -122,6 +131,14 @@
         (assoc-in [:diagonal-move :current-direction] (random-diagonal-direction)))
     enemy))
 
+(defn component-shoot-player [comp-data func]
+  (if (> (- (js/millis)
+            (:shoot-time comp-data))
+         (:interval comp-data))
+    (do (func)
+        (assoc comp-data :shoot-time (js/millis)))
+    comp-data))
+
 (defn update-enemy [app-state enemy]
   ;; (update enemy :pos #(->> (v/sub (:pos (:player @app-state)) %)
   ;;                          (v/normalize)
@@ -133,10 +150,25 @@
                                                                                     (:current-direction (:diagonal-move e)))
                                                                             (v/add %))))))
       (u/if-update :shoot-player (fn [e]
-                                 (shoot-player app-state e)))
+                                   (if (sequential? (:shoot-player e))
+                                     (update e :shoot-player #(map (fn [item]
+                                                                     (component-shoot-player item (fn []
+                                                                                                    (swap! app-state
+                                                                                                           update
+                                                                                                           :enemy-bullets
+                                                                                                           conj
+                                                                                                           {:pos (v/add (:pos e)
+                                                                                                                        (:offset item))
+                                                                                                            :speed (:speed item)
+                                                                                                            :direction (-> (v/add (:pos (:player @app-state))
+                                                                                                                                  [32 32])
+                                                                                                                           (v/sub (:pos enemy))
+                                                                                                                           (v/normalize))}))))
+                                                                   %))
+                                     (shoot-player app-state e))))
       (u/if-update :rotate (fn [e]
-                           (let [{:keys [radius
-                                         theta
+                             (let [{:keys [radius
+                                           theta
                                          theta-vel]} (:rotate e)]
                              (-> e
                                  (assoc :pos (vector (+ (v/x (:pos e))

@@ -703,8 +703,7 @@
               (enemy/defaults app-state))))
 
 (defn spawn-enemies []
-  (let [enemy-type :rotate-and-shoot
-        #_(get [:seek
+  (let [enemy-type (get [:seek
                          :udlr
                          :diagonal-move
                          :rotate-seek
