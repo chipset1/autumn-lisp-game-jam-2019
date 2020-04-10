@@ -8,7 +8,7 @@
 (enable-console-print!)
 
 (def debug true)
-(def width (* 1.5 512))
+(def width (* 14 64))
 (def height (* 1.5 384))
 (def player-speed 5)
 (def player-size 64)
@@ -25,15 +25,15 @@
                               [(* tile-size 2) (- height (* tile-size 3))]
                               [(- width (* tile-size 3)) (- height (* tile-size 3))]])
 
-(def default-room [[1 1 1 1 1 1 1 1 1 1 1 1]
-                   [1 0 0 0 0 0 0 0 0 0 0 1]
-                   [1 0 0 0 0 0 0 0 0 0 0 1]
-                   [1 0 0 0 0 0 0 0 0 0 0 1]
-                   [1 0 0 0 0 0 0 0 0 0 0 1]
-                   [1 0 0 0 0 0 0 0 0 0 0 1]
-                   [1 0 0 0 0 0 0 0 0 0 0 1]
-                   [1 0 0 0 0 0 0 0 0 0 0 1]
-                   [1 1 1 1 1 1 1 1 1 1 1 1]
+(def default-room [[1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+                   [1 0 0 0 0 0 0 0 0 0 0 0 0 1]
+                   [1 0 0 0 0 0 0 0 0 0 0 0 0 1]
+                   [1 0 0 0 0 0 0 0 0 0 0 0 0 1]
+                   [1 0 0 0 0 0 0 0 0 0 0 0 0 1]
+                   [1 0 0 0 0 0 0 0 0 0 0 0 0 1]
+                   [1 0 0 0 0 0 0 0 0 0 0 0 0 1]
+                   [1 0 0 0 0 0 0 0 0 0 0 0 0 1]
+                   [1 1 1 1 1 1 1 1 1 1 1 1 1 1]
                    ])
 
 (defonce app-state (atom {:characters [{:pos [(- 256 32) (- 256 32)]
@@ -567,56 +567,22 @@
               (bullet-key @app-state))))
 
 (defn add-door-right []
-  (swap! app-state
-         assoc-in
-         [:tile-map 3 11]
-         0)
-  (swap! app-state
-         assoc-in
-         [:tile-map 4 11]
-         0)
-  (swap! app-state
-         assoc-in
-         [:tile-map 5 11]
-         0)
-  )
+  (swap! app-state assoc-in [:tile-map 3 13] 0)
+  (swap! app-state assoc-in [:tile-map 4 13] 0)
+  (swap! app-state assoc-in [:tile-map 5 13] 0))
 
 (defn add-door-left []
-  (swap! app-state
-         assoc-in
-         [:tile-map 3 0]
-         0)
-  (swap! app-state
-         assoc-in
-         [:tile-map 4 0]
-         0)
-  (swap! app-state
-         assoc-in
-         [:tile-map 5 0]
-         0)
-  )
+  (swap! app-state assoc-in [:tile-map 3 0] 0)
+  (swap! app-state assoc-in [:tile-map 4 0] 0)
+  (swap! app-state assoc-in [:tile-map 5 0] 0))
 
 (defn add-door-top []
-  (swap! app-state
-         assoc-in
-         [:tile-map 0 5]
-         0)
-  (swap! app-state
-         assoc-in
-         [:tile-map 0 6]
-         0)
-  )
+  (swap! app-state assoc-in [:tile-map 0 6] 0)
+  (swap! app-state assoc-in [:tile-map 0 7] 0))
 
 (defn add-door-bottom []
-  (swap! app-state
-         assoc-in
-         [:tile-map 8 5]
-         0)
-  (swap! app-state
-         assoc-in
-         [:tile-map 8 6]
-         0)
-  )
+  (swap! app-state assoc-in [:tile-map 8 6] 0)
+  (swap! app-state assoc-in [:tile-map 8 7] 0))
 
 (defn shift-left []
   (swap! app-state assoc-in [:player :state] :scrolling-x)
