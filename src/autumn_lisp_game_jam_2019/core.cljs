@@ -921,8 +921,9 @@
                   :items))))
 
 (defn update-particles []
-  (swap! app-state update :particles (partial remove particle/is-dead))
-  (swap! app-state update :particles (partial map particle/update-particle)))
+  (swap! app-state update :particles #(->> %
+                                           (map particle/update-particle)
+                                           (remove particle/is-dead))))
 
 (defn draw-particles []
   (doall (map particle/draw-particle (:particles @app-state))))
