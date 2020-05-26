@@ -105,23 +105,6 @@
         (assoc-in enemy [:random-shoot :shoot-time] (js/millis)))
     enemy))
 
-
-
-(defn shoot-player [app-state enemy]
-  (if (> (- (js/millis)
-            (:shoot-time (:shoot-player enemy)))
-         (:interval (:shoot-player enemy)))
-    (do (swap! app-state update :enemy-bullets conj {:pos (v/add (:pos enemy)
-                                                                 (:offset (:shoot-player enemy)))
-                                                     :speed (:speed (:shoot-player enemy))
-                                                     :direction (-> (v/add (:pos (:player @app-state))
-                                                                            [32 32])
-                                                                    (v/sub (:pos enemy))
-                                                                    (v/normalize))})
-        (assoc-in enemy [:shoot-player :shoot-time] (js/millis)))
-    enemy)
-  )
-
 (defn diagonal-move-update [enemy]
   (if (> (- (js/millis)
             (:move-time (:diagonal-move enemy)))
@@ -131,11 +114,21 @@
         (assoc-in [:diagonal-move :current-direction] (random-diagonal-direction)))
     enemy))
 
-(defn component-shoot-player [comp-data func]
+(defn shoot-player [app-state comp-data enemy]
   (if (> (- (js/millis)
             (:shoot-time comp-data))
          (:interval comp-data))
-    (do (func)
+    (do (swap! app-state
+               update
+               :enemy-bullets
+               conj
+               {:pos (v/add (:pos enemy)
+                            (:offset comp-data))
+                :speed (:speed comp-data)
+                :direction (-> (v/add (:pos (:player @app-state))
+                                      [32 32])
+                               (v/sub (:pos enemy))
+                               (v/normalize))})
         (assoc comp-data :shoot-time (js/millis)))
     comp-data))
 
@@ -151,21 +144,10 @@
                                                                             (v/add %))))))
       (u/if-update :shoot-player (fn [e]
                                    (if (sequential? (:shoot-player e))
-                                     (update e :shoot-player #(map (fn [item]
-                                                                     (component-shoot-player item (fn []
-                                                                                                    (swap! app-state
-                                                                                                           update
-                                                                                                           :enemy-bullets
-                                                                                                           conj
-                                                                                                           {:pos (v/add (:pos e)
-                                                                                                                        (:offset item))
-                                                                                                            :speed (:speed item)
-                                                                                                            :direction (-> (v/add (:pos (:player @app-state))
-                                                                                                                                  [32 32])
-                                                                                                                           (v/sub (:pos enemy))
-                                                                                                                           (v/normalize))}))))
+                                     (update e :shoot-player #(map (fn [comp-data]
+                                                                     (shoot-player app-state comp-data e))
                                                                    %))
-                                     (shoot-player app-state e))))
+                                     (update e :shoot-player #(shoot-player app-state % e)))))
       (u/if-update :rotate (fn [e]
                              (let [{:keys [radius
                                            theta
