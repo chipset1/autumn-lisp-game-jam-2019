@@ -746,6 +746,7 @@
                               :else e))))
   (doall (map (fn [e]
                 (when (<= (:health e) 0)
+                  (particle/enemy-dead app-state (:pos e))
                   (swap! app-state update-in [:player :money] inc)))
               (:enemies @app-state)))
   (swap! app-state
