@@ -934,8 +934,6 @@
   (js/createCanvas (* width (:canvas-scale @app-state)) (* height (:canvas-scale @app-state)))
   (js/noSmooth)
   (add-image :fantasy-tileset-image (js/loadImage "/assets/fantasy-tileset.png"))
-  (add-image :player-image (js/loadImage "/assets/test-sprite.png"))
-  (add-image :heart-image (js/loadImage "/assets/heart.png"))
   (init-starting-room)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state)))
 
