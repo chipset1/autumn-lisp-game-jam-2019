@@ -63,7 +63,7 @@
                           :bullets []
                           :bullet-last-time 0
                           :bullet-interval 200
-                          :player {:pos [(- (/ width 2) 32) (- (/ height 2) 32)]
+                          :player {:pos [(- (/ width 2) (/ tile-size 2)) (- (/ height 2) (/ tile-size 2))]
                                    :health 6
                                    :max-health 6
                                    :money 0 ; increase once enemy is killed
@@ -224,7 +224,7 @@
                   32)))
 
 (defn draw-enemy [e]
-  (js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
+  ;; (js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
   (draw-enemy-image (:pos e) (:size e) (:image-type e)))
 
 
@@ -871,8 +871,11 @@
   (swap! app-state
          assoc-in
          [:player :pos]
-         [(- (:bounds-x @app-state) (/ width 2) 32)
-          (- (:bounds-y @app-state) (/ height 2) 32)]))
+         [(- (:bounds-x @app-state) (/ width 2) (/ tile-size 2))
+          (- (:bounds-y @app-state) (/ height 2) (/ tile-size 2))])
+  (particle/player-dead app-state (v/add [(/ tile-size 2) (/ tile-size 2)]
+                                         (:pos (:player @app-state)))))
+
 
 (defn item-player-collision? [item-x item-y]
   (aabb? [item-x item-y]
