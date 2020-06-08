@@ -7,7 +7,7 @@
 
 (enable-console-print!)
 
-(def debug true)
+(def debug false)
 (def width (* 14 64))
 (def height (* 1.5 384))
 (def player-speed 5)
@@ -103,32 +103,24 @@
             y
             player-size
             player-size)
-
-  (if (< (- (js/millis)
-              (:health-dec-time @app-state))
-           (:health-dec-interval @app-state))
-    (when (> (- (js/millis)
-                (:invulnerable-flash-time @app-state))
-             (:invulnerable-flash-interval @app-state))
-      (swap! app-state assoc :invulnerable-flash-time (js/millis))
-      (js/image (image :fantasy-tileset-image)
-                x
-                y
-                player-size
-                player-size
-                32
-                (* 20 32)
-                32
-                32))
-    (js/image (image :fantasy-tileset-image)
-              x
-              y
-              player-size
-              player-size
-              32
-              (* 20 32)
-              32
-              32)))
+  (let [player-image #(js/image (image :fantasy-tileset-image)
+                                x
+                                y
+                                player-size
+                                player-size
+                                32
+                                (* 20 32)
+                                32
+                                32)]
+    (if (< (- (js/millis)
+             (:health-dec-time @app-state))
+          (:health-dec-interval @app-state))
+     (when (> (- (js/millis)
+                 (:invulnerable-flash-time @app-state))
+              (:invulnerable-flash-interval @app-state))
+       (swap! app-state assoc :invulnerable-flash-time (js/millis))
+       (player-image))
+     (player-image))))
 
 (defn draw-character [[x y]]
   (js/image (image :fantasy-tileset-image)
@@ -932,11 +924,22 @@
 (defn draw-particles []
   (doall (map particle/draw-particle (:particles @app-state))))
 
+(defn draw-health-bar [x y]
+  (let [bar-max-width 200]
+    (js/rect x
+             y
+             (js/map (:health (:player @app-state))
+                     0
+                     (:max-health (:player @app-state))
+                     0
+                     bar-max-width)
+             5)))
+
 (defn setup []
    ;256 	× 	192
   (js/createCanvas (* width (:canvas-scale @app-state)) (* height (:canvas-scale @app-state)))
   (js/noSmooth)
-  (add-image :fantasy-tileset-image (js/loadImage "/assets/fantasy-tileset.png"))
+  (add-image :fantasy-tileset-image (js/loadImage "/assets/fantasy-tileset-grey-scale.png"))
   (init-starting-room)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state)))
 
@@ -969,8 +972,8 @@
           dtext (fn [string y]
                   (js/textSize 16)
                   (js/text string start-x (+ start-y y)))]
-      (dtext (str "player health: " (:health (:player @app-state)) " / 6") 0)
-      (dtext (str "player money: " (:money (:player @app-state))) 16)))
+      (dtext (str "health: " (:health (:player @app-state)) " / 6") 0)))
+  (draw-health-bar 200 92)
 
   ;; (doseq [e (:enemies @app-state)]
   ;;   (swap! app-state update :enemy-bullets conj {:pos (:pos e)
