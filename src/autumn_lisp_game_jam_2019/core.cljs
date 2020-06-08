@@ -947,13 +947,14 @@
   (js/background 50)
   (js/scale (:canvas-scale @app-state))
 
-  (js/stroke 0 255 0)
-  (js/fill 0 255 0)
   (if debug
     (let [start-x 100
           start-y 100
           dtext (fn [string y]
                   (js/text string start-x (+ start-y y)))]
+
+      (js/stroke 0 255 0)
+      (js/fill 0 255 0)
       (dtext (int (js/frameRate)) 0)
       (dtext (:bounds-x @app-state) 10)
       (dtext (:bounds-y @app-state) 20)
@@ -972,6 +973,8 @@
           dtext (fn [string y]
                   (js/textSize 16)
                   (js/text string start-x (+ start-y y)))]
+      (js/fill 255)
+      (js/stroke 255)
       (dtext (str "health: " (:health (:player @app-state)) " / 6") 0)))
   (draw-health-bar 200 92)
 
@@ -1026,6 +1029,9 @@
     (draw-player (-> @app-state
                      :player
                      :pos)))
+
+  (update-particles)
+  (draw-particles)
   (update-bullets)
   (update-enemy-bullets)
   (display-bullets :bullets)
