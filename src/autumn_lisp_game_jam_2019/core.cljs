@@ -865,8 +865,8 @@
          [:player :pos]
          [(- (:bounds-x @app-state) (/ width 2) (/ tile-size 2))
           (- (:bounds-y @app-state) (/ height 2) (/ tile-size 2))])
-  (particle/player-dead app-state (v/add [(/ tile-size 2) (/ tile-size 2)]
-                                         (:pos (:player @app-state)))))
+  (particle/player-respawn app-state (v/add [(/ tile-size 2) (/ tile-size 2)]
+                                            (:pos (:player @app-state)))))
 
 
 (defn item-player-collision? [item-x item-y]
@@ -999,11 +999,10 @@
                    (- (- (:bounds-x @app-state) width)))
                 (+ (:scroll-y @app-state)
                    (- (- (:bounds-y @app-state) height))))
+
   #_(js/translate (- (- (:bounds-x @app-state) width))
                 (- (- (:bounds-y @app-state) height)))
 
-  (update-particles)
-  (draw-particles)
   ;; (draw-shop-keeper (:pos (:shop-keeper @app-state)))
   ;; (draw-shop-keeper-items)
   ;; (update-shop-keeper-items)
