@@ -483,12 +483,14 @@
       (< (v/y pos)
          (- (:bounds-y @app-state) height))))
 
-(defn dec-player-health [e]
+(defn dec-player-health []
   (when (> (- (js/millis)
               (:health-dec-time @app-state))
            (:health-dec-interval @app-state))
     (swap! app-state assoc :health-dec-time (js/millis))
-    (swap! app-state update-in [:player :health] #(js/max (dec %) 0))))
+    (swap! app-state update-in [:player :health] #(js/max (dec %) 0)))
+  (when (<= (:health (:player @app-state)) 0)
+    (particle/enemy-dead app-state (:pos (:player @app-state)))))
 
 (defn bullet-particles []
   (doall (map (fn [b]
@@ -506,7 +508,7 @@
                              (:pos (player-hit-box))
                              (:width (player-hit-box))
                              (:height (player-hit-box)))
-                  (dec-player-health b)))
+                  (dec-player-health)))
               (:enemy-bullets @app-state)))
   (swap! app-state
          update
@@ -729,7 +731,7 @@
                                      (:pos (player-hit-box))
                                      (:width (player-hit-box))
                                      (:height (player-hit-box)))
-                              (do (dec-player-health e)
+                              (do (dec-player-health)
                                   (if (= :do-not-die (:on-player-hit e))
                                     e
                                     (assoc e :health 0)))
