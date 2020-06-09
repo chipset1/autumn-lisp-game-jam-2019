@@ -927,6 +927,10 @@
 
 (defn draw-health-bar [x y]
   (let [bar-max-width 200]
+    (js/noFill)
+    (js/stroke 255)
+    (js/rect x y bar-max-width 5)
+    (js/fill 255)
     (js/rect x
              y
              (js/map (:health (:player @app-state))
