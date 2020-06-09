@@ -78,7 +78,8 @@
                           :health-dec-interval 1000
                           :invulnerable-flash-interval 125
                           :enemy-index -1
-                          :enemy-size tile-size}))
+                          :enemy-size tile-size
+                          :game-not-started? true}))
 
 (defn add-image [key image]
   (swap! app-state assoc-in [:assets :images key] image))
@@ -935,6 +936,14 @@
                      bar-max-width)
              5)))
 
+(defn draw-start-screen []
+  (js/background 0)
+  (js/textSize 80)
+  (js/fill 255)
+  (js/text "Untitled game" (- (/ width 2) 300) (/ height 2))
+  (js/textSize 40)
+  (js/text "press 'a' to start the game" (- (/ width 2) 200) (+ 40 (/ height 2))))
+
 (defn setup []
    ;256 	× 	192
   (js/createCanvas (* width (:canvas-scale @app-state)) (* height (:canvas-scale @app-state)))
@@ -943,7 +952,7 @@
   (init-starting-room)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state)))
 
-(defn draw []
+(defn draw-game []
   (js/background 50)
   (js/scale (:canvas-scale @app-state))
 
@@ -1088,6 +1097,11 @@
                     (:scroll-target-min-y @app-state)))
   )
 
+(defn draw []
+  (if (:game-not-started? @app-state)
+    (draw-start-screen)
+    (draw-game)))
+
 (defn key-pressed []
   ; control = 17 [ (left square bracket) = 219
   ; ] (right square bracket) = 221
@@ -1100,6 +1114,10 @@
     (swap! app-state update :canvas-scale #(js/min (+ % 0.1) 1.0))
     (js/resizeCanvas (* width (:canvas-scale @app-state))
                      (* height (:canvas-scale @app-state))))
+  (when (and (= js/key "a")
+             (:game-not-started? @app-state))
+    (swap! app-state assoc :game-not-started? false)
+    )
   (when (and (:game-over? @app-state)
              (= js/key "r"))
     (swap! app-state assoc :game-over? false)
@@ -1126,17 +1144,18 @@
                            :talking)))
                 (:characters @app-state)))))
 
+
+
 (defn mouse-pressed []
-  #_(swap! app-state update :enemies conj (enemy/create-enemy [js/mouseX js/mouseY] :shoot))
-  (swap! app-state update :enemy-bullets conj {:pos (:pos (:player @app-state))
-                                               :speed 10
-                                               :direction [1 1]}))
+  ;; (swap! app-state update-in [:player :health] #(mod (dec %) 7))
+  #_(particle/enemy-dead app-state [js/mouseX js/mouseY]))
+
 
 (doto js/window
   (aset "setup" setup)
   (aset "draw" draw)
   (aset "keyPressed" key-pressed)
-  #_(aset "mousePressed" mouse-pressed)
+  (aset "mousePressed" mouse-pressed)
   )
 
 (defn on-js-reload []
