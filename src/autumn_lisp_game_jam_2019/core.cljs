@@ -7,7 +7,7 @@
 
 (enable-console-print!)
 
-(def debug false)
+;; (def debug false)
 (def width (* 14 64))
 (def height (* 1.5 384))
 (def player-speed 5)
@@ -664,7 +664,7 @@
               (enemy/defaults app-state))))
 
 (defn spawn-enemies []
-  (let [enemy-type (get [:seek
+  (let [enemy-type :rotate-and-shoot #_(get [:seek
                          :udlr
                          :diagonal-move
                          :rotate-seek
@@ -675,7 +675,7 @@
     (cond  (= :rotate-and-shoot enemy-type)
            (add-enemy! (- (/ width 2) 64)
                        (- (/ height 2)
-                          150
+                          180
                           (/ (:enemy-size @app-state) 4))
                        enemy-type)
            (= :sit-and-shoot enemy-type)
@@ -942,6 +942,23 @@
                      bar-max-width)
              5)))
 
+(defn draw-boss-health-bar []
+  (let [enemy (first (:enemies @app-state))
+        health (or (:health enemy) 0)
+        bar-max-width 300]
+    (when (= :rotate-and-shoot (:type enemy))
+      (js/text (str "boss health: " health " / 100" ) 300 (- height 138))
+      (js/noFill)
+      (js/rect 300
+               (- height 128)
+               300
+               20)
+      (js/fill 255)
+      (js/rect 300
+               (- height 128)
+               (js/map health 0 100 0 bar-max-width)
+               20))))
+
 (defn draw-start-screen []
   (js/background 0)
   (js/textSize 80)
@@ -962,12 +979,11 @@
   (js/background 50)
   (js/scale (:canvas-scale @app-state))
 
-  (if debug
+  #_(if debug
     (let [start-x 100
           start-y 100
           dtext (fn [string y]
                   (js/text string start-x (+ start-y y)))]
-
       (js/stroke 0 255 0)
       (js/fill 0 255 0)
       (dtext (int (js/frameRate)) 0)
@@ -983,16 +999,19 @@
       (dtext (str "game-over?: " (:game-over? @app-state)) 100)
       (dtext (str "enemy-index: " (:enemy-index @app-state)) 110)
       )
-    (let [start-x 100
-          start-y 100
-          dtext (fn [string y]
-                  (js/textSize 16)
-                  (js/text string start-x (+ start-y y)))]
-      (js/fill 255)
-      (js/stroke 255)
-      (dtext (str "health: " (:health (:player @app-state)) " / 6") 0)))
-  (draw-health-bar 200 92)
+    )
+  (let [start-x 100
+        start-y 100
+        dtext (fn [string y]
+                (js/textSize 16)
+                (js/text string start-x (+ start-y y)))]
+    (js/fill 255)
+    (js/stroke 255)
+    (dtext (str "health: " (:health (:player @app-state)) " / 6") 0)
+    (dtext (str "enemy bullets: "(:enemy-bullets @app-state)) 10)
+    (draw-health-bar 200 92))
 
+  (draw-boss-health-bar)
   ;; (doseq [e (:enemies @app-state)]
   ;;   (swap! app-state update :enemy-bullets conj {:pos (:pos e)
   ;;                                                :speed 10
@@ -1153,6 +1172,7 @@
 
 
 (defn mouse-pressed []
+  ;; (dec-player-health)
   ;; (swap! app-state update-in [:player :health] #(mod (dec %) 7))
   #_(particle/enemy-dead app-state [js/mouseX js/mouseY]))
 
