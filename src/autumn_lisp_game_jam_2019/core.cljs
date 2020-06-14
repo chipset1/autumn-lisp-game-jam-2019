@@ -508,6 +508,7 @@
                              (:pos (player-hit-box))
                              (:width (player-hit-box))
                              (:height (player-hit-box)))
+                  (particle/bullet-explode app-state (:pos b))
                   (dec-player-health)))
               (:enemy-bullets @app-state)))
   (swap! app-state
