@@ -946,7 +946,7 @@
   (let [enemy (first (:enemies @app-state))
         health (or (:health enemy) 0)
         bar-max-width 300]
-    (when (= :rotate-and-shoot (:type enemy))
+    (when (= :final-boss (:type enemy))
       (js/text (str "boss health: " health " / 100" ) 300 (- height 138))
       (js/noFill)
       (js/rect 300

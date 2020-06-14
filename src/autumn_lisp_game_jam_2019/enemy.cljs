@@ -36,7 +36,7 @@
          :health 100
          :image-type :eye-monster
          :on-player-hit :do-not-die
-         :type type
+         :type :final-boss
          :size (* (:enemy-size @app-state) 2)
          :rotate {:radius 4
                   :theta 0
