@@ -978,6 +978,7 @@
   (js/createCanvas (* width (:canvas-scale @app-state)) (* height (:canvas-scale @app-state)))
   (js/noSmooth)
   (add-image :fantasy-tileset-image (js/loadImage "/assets/fantasy-tileset-grey-scale.png"))
+  ;; (add-image :fantasy-tileset-image (js/loadImage "/assets/fantasy-tileset.png"))
   (init-starting-room)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state)))
 
