@@ -21,7 +21,7 @@
                                                      :life 50}))))
 
 (defn enemy-dead [app-state pos]
-  (dotimes [i 10]
+  (dotimes [i 15]
     (swap! app-state
            update
            :particles
