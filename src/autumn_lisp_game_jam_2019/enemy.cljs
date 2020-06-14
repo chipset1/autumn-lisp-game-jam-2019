@@ -44,7 +44,7 @@
          :shoot-player [{:shoot-time (js/millis)
                          :offset [0 0]
                          :speed 2
-                         :interval 800}
+                         :interval 1000}
                         {:shoot-time (js/millis)
                          :offset [128 128]
                          :speed 2
@@ -145,9 +145,9 @@
                                                                             (v/add %))))))
       (u/if-update :shoot-player (fn [e]
                                    (if (sequential? (:shoot-player e))
-                                     (update e :shoot-player #(map (fn [comp-data]
-                                                                     (shoot-player app-state comp-data e))
-                                                                   %))
+                                     (update e :shoot-player #(doall (map (fn [comp-data]
+                                                                            (shoot-player app-state comp-data e))
+                                                                          %)))
                                      (update e :shoot-player #(shoot-player app-state % e)))))
       (u/if-update :rotate (fn [e]
                              (let [{:keys [radius

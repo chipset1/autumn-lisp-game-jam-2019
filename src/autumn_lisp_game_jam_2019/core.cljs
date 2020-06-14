@@ -7,7 +7,7 @@
 
 (enable-console-print!)
 
-;; (def debug false)
+(def debug false)
 (def width (* 14 64))
 (def height (* 1.5 384))
 (def player-speed 5)
@@ -1007,8 +1007,11 @@
                 (js/text string start-x (+ start-y y)))]
     (js/fill 255)
     (js/stroke 255)
-    (dtext (str "health: " (:health (:player @app-state)) " / 6") 0)
-    (dtext (str "enemy bullets: "(:enemy-bullets @app-state)) 10)
+
+    (dtext (int (js/frameRate)) 0)
+    (dtext (str "health: " (:health (:player @app-state)) " / 6") 10)
+    (dtext (str "enemy bullets: "(:enemy-bullets @app-state)) 20)
+    ;; (dtext (str "enemy 0: " (:enemies @app-state)) 30)
     (draw-health-bar 200 92))
 
   (draw-boss-health-bar)
