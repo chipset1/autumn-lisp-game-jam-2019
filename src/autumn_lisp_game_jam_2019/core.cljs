@@ -79,7 +79,8 @@
                           :invulnerable-flash-interval 125
                           :enemy-index -1
                           :enemy-size tile-size
-                          :game-not-started? true}))
+                          :game-not-started? true
+                          :game-completed? false}))
 
 (defn add-image [key image]
   (swap! app-state assoc-in [:assets :images key] image))
@@ -745,6 +746,10 @@
                   (particle/enemy-dead app-state (:pos e))
                   (swap! app-state update-in [:player :money] inc)))
               (:enemies @app-state)))
+  (when (and (<= (:health (first (:enemies @app-state)))
+                 0)
+             (= :final-boss (:type (first (:enemies @app-state)))))
+    (swap! app-state assoc :game-completed? true))
   (swap! app-state
          update
          :enemies
@@ -1036,6 +1041,9 @@
                        256))))
   (spawn-room)
   (scroll-to-next-room)
+
+  (when (:game-completed? @app-state)
+    (js/text "You completed the game.\nTHE END" (/ width 2) (/ height 2)))
   (js/translate (+ (:scroll-x @app-state)
                    (- (- (:bounds-x @app-state) width)))
                 (+ (:scroll-y @app-state)
