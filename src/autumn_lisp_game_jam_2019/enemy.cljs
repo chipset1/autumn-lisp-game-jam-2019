@@ -152,7 +152,7 @@
       (u/if-update :rotate (fn [e]
                              (let [{:keys [radius
                                            theta
-                                         theta-vel]} (:rotate e)]
+                                           theta-vel]} (:rotate e)]
                              (-> e
                                  (assoc :pos (vector (+ (v/x (:pos e))
                                                         (* radius (js/cos theta)))
