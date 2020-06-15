@@ -1082,7 +1082,7 @@
   ;; (swing-sword)
 
   (update-enemies)
-  (doall (map (fn [character]
+  #_(doall (map (fn [character]
                 (js/stroke 0 255 0)
                 (js/fill 0 255 0)
                 (when (and (not= :talking
@@ -1117,7 +1117,7 @@
               (:characters @app-state)))
   (doall (map #(draw-enemy %)
               (:enemies @app-state)))
-  (doall (map #(draw-character (:pos %))
+  #_(doall (map #(draw-character (:pos %))
               (:characters @app-state)))
 
   (draw-tile-map :tile-map
