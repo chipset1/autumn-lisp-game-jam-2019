@@ -79,7 +79,7 @@
                           :invulnerable-flash-interval 125
                           :enemy-index -1
                           :enemy-size tile-size
-                          :game-not-started? true
+                          :game-started? false
                           :game-completed? false}))
 
 (defn add-image [key image]
@@ -966,12 +966,11 @@
                20))))
 
 (defn draw-start-screen []
-  (js/background 0)
-  (js/textSize 80)
   (js/fill 255)
+  (js/textSize 80)
   (js/text "Untitled game" (- (/ width 2) 300) (/ height 2))
   (js/textSize 40)
-  (js/text "press 'a' to start the game" (- (/ width 2) 200) (+ 40 (/ height 2))))
+  (js/text "press 'r' to start the game" (- (/ width 2) 200) (+ 40 (/ height 2))))
 
 (defn setup []
    ;256 	× 	192
@@ -982,7 +981,7 @@
   (init-starting-room)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state)))
 
-(defn draw-game []
+(defn draw []
   (js/background 50)
   (js/scale (:canvas-scale @app-state))
 
@@ -1038,6 +1037,8 @@
                        256))))
   (spawn-room)
   (scroll-to-next-room)
+  (when (not (:game-started? @app-state))
+    (draw-start-screen))
 
   (when (:game-completed? @app-state)
     (js/text "You completed the game.\nTHE END" (/ width 2) (/ height 2)))
@@ -1064,7 +1065,8 @@
   ;; (draw-shop-keeper-items)
   ;; (update-shop-keeper-items)
 
-  (when (not (:game-over? @app-state))
+  (when (and (:game-started? @app-state)
+             (not (:game-over? @app-state)))
     (when (not (or (= :scrolling-x (:state (:player @app-state)))
                    (= :scrolling-y (:state (:player @app-state)))))
       (player-movement))
@@ -1131,11 +1133,6 @@
                     (:scroll-target-min-y @app-state)))
   )
 
-(defn draw []
-  (if (:game-not-started? @app-state)
-    (draw-start-screen)
-    (draw-game)))
-
 (defn key-pressed []
   ; control = 17 [ (left square bracket) = 219
   ; ] (right square bracket) = 221
@@ -1148,9 +1145,11 @@
     (swap! app-state update :canvas-scale #(js/min (+ % 0.1) 1.0))
     (js/resizeCanvas (* width (:canvas-scale @app-state))
                      (* height (:canvas-scale @app-state))))
-  (when (and (= js/key "a")
-             (:game-not-started? @app-state))
-    (swap! app-state assoc :game-not-started? false)
+  (when (and (= js/key "r")
+             (not (:game-started? @app-state)))
+    (particle/player-respawn app-state (v/add [(/ tile-size 2) (/ tile-size 2)]
+                                              (:pos (:player @app-state))))
+    (swap! app-state assoc :game-started? true)
     )
   (when (and (:game-over? @app-state)
              (= js/key "r"))
