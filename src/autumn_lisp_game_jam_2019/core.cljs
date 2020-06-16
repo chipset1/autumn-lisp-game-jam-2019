@@ -8,12 +8,12 @@
 (enable-console-print!)
 
 (def debug false)
-(def width (* 14 64))
-(def height (* 1.5 384))
+(def tile-size 64)
+(def width (* 14 tile-size))
+(def height (* 9 tile-size))
 (def player-speed 5)
 (def player-size 64)
 (def bullet-size 10)
-(def tile-size 64)
 (def door-spawn-chance 0.5)
 (def enemy-spawn-chance 0.9)
 (def corner-positions [[tile-size tile-size]
