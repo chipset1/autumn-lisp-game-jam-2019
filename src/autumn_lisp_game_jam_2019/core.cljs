@@ -44,7 +44,7 @@
                           :particles []
                           :enemies []
                           :enemy-bullets []
-                          :assets {:images {:fantasy-tileset-image nil}
+                          :assets {:images {:fantasy-tileset nil}
                                    :audio {:shot nil}}
                           :shop-keeper {:pos [0 0]
                                         :items [{:heal 1
@@ -99,7 +99,7 @@
   (get-in @app-state [:assets :images key]))
 
 (defn draw-wall-tile [x y]
-  (js/image (image :fantasy-tileset-image)
+  (js/image (image :fantasy-tileset)
             x
             y
             tile-size
@@ -115,7 +115,7 @@
             y
             player-size
             player-size)
-  (let [player-image #(js/image (image :fantasy-tileset-image)
+  (let [player-image #(js/image (image :fantasy-tileset)
                                 x
                                 y
                                 player-size
@@ -135,7 +135,7 @@
      (player-image))))
 
 (defn draw-character [[x y]]
-  (js/image (image :fantasy-tileset-image)
+  (js/image (image :fantasy-tileset)
             x
             y
             tile-size
@@ -147,7 +147,7 @@
 
 (defn draw-enemy-image [[x y] size type]
   (cond (= :spider type)
-        (js/image (image :fantasy-tileset-image)
+        (js/image (image :fantasy-tileset)
                   x
                   y
                   size
@@ -157,7 +157,7 @@
                   32
                   32)
         (= :archer type)
-        (js/image (image :fantasy-tileset-image)
+        (js/image (image :fantasy-tileset)
                   x
                   y
                   size
@@ -167,7 +167,7 @@
                   32
                   32)
         (= :ghoul type)
-        (js/image (image :fantasy-tileset-image)
+        (js/image (image :fantasy-tileset)
                   x
                   y
                   size
@@ -177,7 +177,7 @@
                   32
                   32)
         (= :sorcerer type)
-        (js/image (image :fantasy-tileset-image)
+        (js/image (image :fantasy-tileset)
                   x
                   y
                   size
@@ -187,7 +187,7 @@
                   32
                   32)
         (= :hedge-hog type)
-        (js/image (image :fantasy-tileset-image)
+        (js/image (image :fantasy-tileset)
                   x
                   y
                   size
@@ -197,7 +197,7 @@
                   32
                   32)
         (= :skeleton type)
-        (js/image (image :fantasy-tileset-image)
+        (js/image (image :fantasy-tileset)
                   x
                   y
                   size
@@ -207,7 +207,7 @@
                   32
                   32)
         (= :eye-monster type)
-        (js/image (image :fantasy-tileset-image)
+        (js/image (image :fantasy-tileset)
                   x
                   y
                   size
@@ -217,7 +217,7 @@
                   32
                   32)
         :else
-        (js/image (image :fantasy-tileset-image)
+        (js/image (image :fantasy-tileset)
                   x
                   y
                   size
@@ -239,7 +239,7 @@
   (js/rotate angle)
   (js/ellipse 0 0 tile-size tile-size)
   (js/translate (- tile-size) (- tile-size))
-  (js/image (image :fantasy-tileset-image)
+  (js/image (image :fantasy-tileset)
             0
             0
             tile-size
@@ -251,7 +251,7 @@
   (js/pop))
 
 (defn draw-shop-keeper [[x y]]
-  (js/image (image :fantasy-tileset-image)
+  (js/image (image :fantasy-tileset)
             x
             y
             tile-size
@@ -755,6 +755,7 @@
   (doall (map (fn [e]
                 (when (<= (:health e) 0)
                   (particle/enemy-dead app-state (:pos e))
+                  (play-sound :explosion)
                   (swap! app-state update-in [:player :money] inc)))
               (:enemies @app-state)))
   (when (and (<= (:health (first (:enemies @app-state)))
@@ -987,8 +988,9 @@
    ;256 	× 	192
   (js/createCanvas (* width (:canvas-scale @app-state)) (* height (:canvas-scale @app-state)))
   (js/noSmooth)
-  (add-image :fantasy-tileset-image (js/loadImage "/assets/fantasy-tileset-grey-scale.png"))
+  (add-image :fantasy-tileset (js/loadImage "/assets/fantasy-tileset-grey-scale.png"))
   (add-sound :shot (js/loadSound "/assets/audio/shot.wav"))
+  (add-sound :explosion (js/loadSound "/assets/audio/explosion.wav"))
   ;; (add-image :fantasy-tileset-image (js/loadImage "/assets/fantasy-tileset.png"))
   (init-starting-room)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state)))
