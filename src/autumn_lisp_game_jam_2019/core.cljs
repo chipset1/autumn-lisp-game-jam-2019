@@ -967,8 +967,8 @@
 
 (defn draw-start-screen []
   (js/fill 255)
-  (js/textSize 80)
-  (js/text "Untitled game" (- (/ width 2) 300) (/ height 2))
+  (js/textSize 60)
+  (js/text "Rabbit Dungeon Shooter" (- (/ width 2) 300) (/ height 2))
   (js/textSize 40)
   (js/text "press 'r' to start the game" (- (/ width 2) 200) (+ 40 (/ height 2))))
 
