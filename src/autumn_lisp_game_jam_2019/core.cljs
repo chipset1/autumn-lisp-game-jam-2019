@@ -44,7 +44,8 @@
                           :particles []
                           :enemies []
                           :enemy-bullets []
-                          :assets {:images {:fantasy-tileset-image nil}}
+                          :assets {:images {:fantasy-tileset-image nil}
+                                   :audio {:shot nil}}
                           :shop-keeper {:pos [0 0]
                                         :items [{:heal 1
                                                  :sold? false
@@ -81,6 +82,15 @@
                           :enemy-size tile-size
                           :game-started? false
                           :game-completed? false}))
+
+(defn add-sound [key sound]
+  (swap! app-state assoc-in [:assets :audio key] sound))
+
+(defn sound [key]
+  (get-in @app-state [:assets :audio key]))
+
+(defn play-sound [key]
+  (. (sound key) play))
 
 (defn add-image [key image]
   (swap! app-state assoc-in [:assets :images key] image))
@@ -441,6 +451,7 @@
            :not-attacking)))
 
 (defn shoot-direction [dir]
+  (play-sound :shot)
   (swap! app-state
          update
          :bullets
@@ -977,6 +988,7 @@
   (js/createCanvas (* width (:canvas-scale @app-state)) (* height (:canvas-scale @app-state)))
   (js/noSmooth)
   (add-image :fantasy-tileset-image (js/loadImage "/assets/fantasy-tileset-grey-scale.png"))
+  (add-sound :shot (js/loadSound "/assets/audio/shot.wav"))
   ;; (add-image :fantasy-tileset-image (js/loadImage "/assets/fantasy-tileset.png"))
   (init-starting-room)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state)))
