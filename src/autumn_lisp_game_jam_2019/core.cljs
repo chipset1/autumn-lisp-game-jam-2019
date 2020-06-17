@@ -1041,7 +1041,8 @@
     (draw-start-screen))
 
   (when (:game-completed? @app-state)
-    (js/text "You completed the game.\nTHE END" (/ width 2) (/ height 2)))
+    (js/textSize 40)
+    (js/text "You completed the game.\n           THE END" (- (/ width 2) 200) (- (/ height 2) 50)))
   (when (<= (:health (:player @app-state))
             0)
     (swap! app-state assoc :enemies [])
