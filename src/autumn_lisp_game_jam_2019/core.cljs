@@ -92,6 +92,11 @@
 (defn play-sound [key]
   (. (sound key) play))
 
+(defn play-tone-shot []
+  (let [tone-shot (nth (sound :tone-shots)
+                       (int (js/random 7)))]
+    (. tone-shot play)))
+
 (defn add-image [key image]
   (swap! app-state assoc-in [:assets :images key] image))
 
@@ -451,7 +456,7 @@
            :not-attacking)))
 
 (defn shoot-direction [dir]
-  (play-sound :shot)
+  (play-tone-shot)
   (swap! app-state
          update
          :bullets
@@ -989,7 +994,9 @@
   (js/createCanvas (* width (:canvas-scale @app-state)) (* height (:canvas-scale @app-state)))
   (js/noSmooth)
   (add-image :fantasy-tileset (js/loadImage "/assets/fantasy-tileset-grey-scale.png"))
-  (add-sound :shot (js/loadSound "/assets/audio/shot.wav"))
+  (add-sound :tone-shots (map (fn [i]
+                                (js/loadSound (str "/assets/audio/toneShots/" i ".wav")))
+                              (range 0 7)))
   (add-sound :explosion (js/loadSound "/assets/audio/explosion.wav"))
   ;; (add-image :fantasy-tileset-image (js/loadImage "/assets/fantasy-tileset.png"))
   (init-starting-room)
