@@ -507,6 +507,7 @@
     (swap! app-state assoc :health-dec-time (js/millis))
     (swap! app-state update-in [:player :health] #(js/max (dec %) 0)))
   (when (<= (:health (:player @app-state)) 0)
+    (play-sound :explosion)
     (particle/enemy-dead app-state (:pos (:player @app-state)))))
 
 (defn bullet-particles []
