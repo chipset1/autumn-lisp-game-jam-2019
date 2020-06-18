@@ -17,9 +17,9 @@
 (def door-spawn-chance 0.5)
 (def enemy-spawn-chance 0.9)
 (def corner-positions [[tile-size tile-size]
-                       [(- width 128) tile-size]
-                       [tile-size (- height 128)]
-                       [(- width 128) (- height 128)]])
+                       [(- width (* tile-size 2)) tile-size]
+                       [tile-size (- height (* tile-size 2))]
+                       [(- width (* tile-size 2)) (- height (* tile-size 2))]])
 (def center-corner-positions [[(* tile-size 2) (* tile-size 2)]
                               [(- width (* tile-size 3)) (* tile-size 2)]
                               [(* tile-size 2) (- height (* tile-size 3))]
