@@ -15,7 +15,6 @@
 (def player-size 64)
 (def bullet-size 10)
 (def door-spawn-chance 0.5)
-(def enemy-spawn-chance 0.9)
 (def corner-positions [[tile-size tile-size]
                        [(- width (* tile-size 2)) tile-size]
                        [tile-size (- height (* tile-size 2))]
@@ -610,38 +609,7 @@
          :enemies
          (partial remove (fn [e]
                            (or (enemy-out-of-room? e)
-                               (<= (:health e) 0)))))
-  )
-
-
-
-(defn spawn-shop-keeper-items []
-  (doall (map-indexed (fn [index item]
-                        (swap! app-state
-                               assoc-in
-                               [:shop-keeper :items index :sold?]
-                               false))
-                      (-> @app-state
-                          :shop-keeper
-                          :items))))
-
-(defn spawn-shop-keeper []
-  (if (dungeon/room-has-one-door? (:tile-map @app-state))
-    (do (spawn-shop-keeper-items)
-        (swap! app-state
-               assoc-in
-               [:shop-keeper :pos]
-               [(- (:bounds-x @app-state)
-                   (/ width 2)
-                   32)
-                (- (:bounds-y @app-state)
-                   (/ height 2)
-                   32)]))
-    (swap! app-state
-           assoc-in
-           [:shop-keeper :pos]
-           [0 0])
-    ))
+                               (<= (:health e) 0))))))
 
 (defn on-room-spawn []
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
@@ -780,7 +748,6 @@
   (js/text "press 'r' to start the game" (- (/ width 2) 200) (+ 40 (/ height 2))))
 
 (defn setup []
-   ;256 	× 	192
   (js/createCanvas (* width (:canvas-scale @app-state)) (* height (:canvas-scale @app-state)))
   (js/noSmooth)
   (add-image :fantasy-tileset (js/loadImage "/assets/fantasy-tileset-grey-scale.png"))
@@ -788,7 +755,6 @@
                                 (js/loadSound (str "/assets/audio/toneShots/" i ".wav")))
                               (range 0 7)))
   (add-sound :explosion (js/loadSound "/assets/audio/explosion.wav"))
-  ;; (add-image :fantasy-tileset-image (js/loadImage "/assets/fantasy-tileset.png"))
   (init-starting-room)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state)))
 
@@ -898,23 +864,7 @@
     (swap! app-state assoc :game-over? false)
     (reset-level)))
 
-
-
-(defn mouse-pressed []
-  ;; (dec-player-health)
-  ;; (swap! app-state update-in [:player :health] #(mod (dec %) 7))
-  #_(particle/enemy-dead app-state [js/mouseX js/mouseY]))
-
-
 (doto js/window
   (aset "setup" setup)
   (aset "draw" draw)
-  (aset "keyPressed" key-pressed)
-  (aset "mousePressed" mouse-pressed)
-  )
-
-(defn on-js-reload []
-  ;; optionally touch your app-state to force rerendering depending on
-  ;; your application
-  ;; (swap! app-state update-in [:__figwheel_counter] inc)
-)
+  (aset "keyPressed" key-pressed))
