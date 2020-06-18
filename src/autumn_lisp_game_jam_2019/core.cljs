@@ -494,13 +494,9 @@
                       (:scroll-interval @app-state))
                    (:scroll-target-min-x @app-state)
                    0)))
-  (when (and (not= :talking
-                   (-> @app-state
-                       :player
-                       :state))
-             (> (js/millis)
-                (+ (:scroll-start-time @app-state)
-                   (:scroll-interval @app-state))))
+  (when (> (js/millis)
+           (+ (:scroll-start-time @app-state)
+              (:scroll-interval @app-state)))
     (swap! app-state assoc :scroll-x 0)
     (swap! app-state assoc :scroll-y 0)
     (swap! app-state
@@ -799,8 +795,7 @@
 (defn draw []
   (js/background 50)
   (js/scale (:canvas-scale @app-state))
-
-  #_(if debug
+  (if debug
     (let [start-x 100
           start-y 100
           dtext (fn [string y]
@@ -818,43 +813,21 @@
       (dtext (str "enemy bullets: "(:enemy-bullets @app-state)) 80)
       (dtext (str (:state (:player @app-state))) 90)
       (dtext (str "game-over?: " (:game-over? @app-state)) 100)
-      (dtext (str "enemy-index: " (:enemy-index @app-state)) 110)
-      )
-    )
-  (let [start-x 100
-        start-y 100
-        dtext (fn [string y]
-                (js/textSize 16)
-                (js/text string start-x (+ start-y y)))]
-    (js/fill 255)
-    (js/stroke 255)
-    (dtext (str "health: " (:health (:player @app-state)) " / 6") 0)
-    (draw-health-bar 200 92))
-
+      (dtext (str "enemy-index: " (:enemy-index @app-state)) 110))
+    (let [start-x 100
+          start-y 100
+          dtext (fn [string y]
+                  (js/textSize 16)
+                  (js/text string start-x (+ start-y y)))]
+      (js/fill 255)
+      (js/stroke 255)
+      (dtext (str "health: " (:health (:player @app-state)) " / 6") 0)
+      (draw-health-bar 200 92)))
   (draw-boss-health-bar)
-  ;; (doseq [e (:enemies @app-state)]
-  ;;   (swap! app-state update :enemy-bullets conj {:pos (:pos e)
-  ;;                                                :speed 10
-  ;;                                                :direction [1 1]}))
-  ;; (js/text (str "scroll-x " (:scroll-x @app-state)) 150 200)
-  ;; (js/text (str "scroll-y " (:scroll-y @app-state)) 150 210)
-  #_(js/translate (- (+ 32
-                      (- (-> @app-state
-                           :player
-                           :pos
-                           v/x)
-                       256)))
-                (- (+ 32
-                      (- (-> @app-state
-                           :player
-                           :pos
-                           v/y)
-                       256))))
   (spawn-room)
   (scroll-to-next-room)
   (when (not (:game-started? @app-state))
     (draw-start-screen))
-
   (when (:game-completed? @app-state)
     (js/textSize 40)
     (js/text "You completed the game.\n           THE END" (- (/ width 2) 200) (- (/ height 2) 50)))
@@ -873,14 +846,6 @@
                    (- (- (:bounds-x @app-state) width)))
                 (+ (:scroll-y @app-state)
                    (- (- (:bounds-y @app-state) height))))
-
-  #_(js/translate (- (- (:bounds-x @app-state) width))
-                (- (- (:bounds-y @app-state) height)))
-
-  ;; (draw-shop-keeper (:pos (:shop-keeper @app-state)))
-  ;; (draw-shop-keeper-items)
-  ;; (update-shop-keeper-items)
-
   (when (and (:game-started? @app-state)
              (not (:game-over? @app-state)))
     (when (not (or (= :scrolling-x (:state (:player @app-state)))
@@ -890,64 +855,23 @@
     (draw-player (-> @app-state
                      :player
                      :pos)))
-
   (update-particles)
   (draw-particles)
   (update-bullets)
   (update-enemy-bullets)
   (display-bullets :bullets)
   (display-bullets :enemy-bullets)
-  ;; (swing-sword)
-
   (update-enemies)
-  #_(doall (map (fn [character]
-                (js/stroke 0 255 0)
-                (js/fill 0 255 0)
-                (when (and (not= :talking
-                                 (-> @app-state
-                                     :player
-                                     :state))
-                           (aabb? (-> @app-state
-                                      :player
-                                      :pos)
-                                  tile-size
-                                  (:pos character)
-                                  tile-size))
-                  (js/text "press j to talk..."
-                           (v/x (:pos character))
-                           (+ (v/y (:pos character))
-                              74)))
-                (when (= :talking
-                         (-> @app-state
-                             :player
-                             :state))
-                  (if (>= (:dialog-index @app-state)
-                          (count (:dialog character)))
-                    (do (swap! app-state assoc-in [:player :state] :not-talking)
-                        (swap! app-state assoc
-                               :dialog-index
-                               0))
-                    (js/text (nth (:dialog character)
-                                  (:dialog-index @app-state))
-                             (v/x (:pos character))
-                             (+ (v/y (:pos character))
-                                74)))))
-              (:characters @app-state)))
   (doall (map #(draw-enemy %)
               (:enemies @app-state)))
-  #_(doall (map #(draw-character (:pos %))
-              (:characters @app-state)))
-
   (draw-tile-map :tile-map
                  (- (:bounds-x @app-state) width)
                  (- (:bounds-y @app-state) height))
-
   (draw-tile-map :tile-map-previous
                  (- (- (:bounds-x @app-state) width)
                     (:scroll-target-min-x @app-state))
                  (- (- (:bounds-y @app-state) height)
-                    (:scroll-target-min-y @app-state)))
-  )
+                    (:scroll-target-min-y @app-state))))
 
 (defn key-pressed []
   ; control = 17 [ (left square bracket) = 219
@@ -972,28 +896,7 @@
              (= js/key "r"))
     (play-sound :explosion)
     (swap! app-state assoc :game-over? false)
-    (reset-level))
-  (when (= js/key "j")
-    (when (= :talking
-             (-> @app-state
-                 :player
-                 :state))
-      (swap! app-state
-             update
-             :dialog-index
-             inc))
-    (doall (map (fn [character]
-                  (when (aabb? (-> @app-state
-                                   :player
-                                   :pos)
-                               tile-size
-                               (:pos character)
-                               tile-size)
-                    (swap! app-state
-                           assoc-in
-                           [:player :state]
-                           :talking)))
-                (:characters @app-state)))))
+    (reset-level)))
 
 
 
