@@ -104,11 +104,6 @@
             32))
 
 (defn draw-player [[x y]]
-  #_(js/image (:player-image @app-state)
-            x
-            y
-            player-size
-            player-size)
   (let [player-image #(js/image (image :fantasy-tileset)
                                 x
                                 y
@@ -127,17 +122,6 @@
        (swap! app-state assoc :invulnerable-flash-time (js/millis))
        (player-image))
      (player-image))))
-
-(defn draw-character [[x y]]
-  (js/image (image :fantasy-tileset)
-            x
-            y
-            tile-size
-            tile-size
-            32
-            (* 18 32)
-            32
-            32))
 
 (defn draw-enemy-image [[x y] size type]
   (cond (= :spider type)
@@ -225,43 +209,6 @@
   ;; (js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
   (draw-enemy-image (:pos e) (:size e) (:image-type e)))
 
-
-
-(defn draw-sword [[x y] angle]
-  (js/push)
-  (js/translate (+ x 32) (+ y 32))
-  (js/rotate angle)
-  (js/ellipse 0 0 tile-size tile-size)
-  (js/translate (- tile-size) (- tile-size))
-  (js/image (image :fantasy-tileset)
-            0
-            0
-            tile-size
-            tile-size
-            64
-            (* 7 32)
-            32
-            32)
-  (js/pop))
-
-(defn draw-shop-keeper [[x y]]
-  (js/image (image :fantasy-tileset)
-            x
-            y
-            tile-size
-            tile-size
-            (* 7 32)
-            (* 18 32)
-            32
-            32))
-
-(defn draw-heart-item [x y]
-  (js/image (image :heart-image)
-            x
-            y
-            tile-size
-            tile-size))
-
 (defn player-hit-box
   ([]
    (player-hit-box (:pos (:player @app-state))))
@@ -326,10 +273,6 @@
 
 (defn move-player [vel-direction]
   (swap! app-state
-         assoc-in
-         [:player :direction]
-         vel-direction)
-  (swap! app-state
          update-in
          [:player :pos]
          new-player-position
@@ -352,97 +295,6 @@
         (> (+ x1 width1) x2)
         (< y1 (+ y2 height2))
         (> (+ y1 height1) y2))))
-
-(defn start-sword-swing []
-  (swap! app-state
-         assoc-in
-         [:player :state]
-         :attacking)
-  (swap! app-state
-         assoc-in
-         [:player :sword :swing-start]
-         (js/millis)))
-
-(defn sword-angle [[x-dir y-dir]]
-  (let [base-angle (+ (+ (/ js/PI 4) (/ js/PI 2))
-                      (-> @app-state
-                          :player
-                          :sword
-                          :angle))]
-    (cond (= y-dir 1) base-angle
-          (= y-dir -1) (+ js/PI base-angle)
-          (= x-dir 1) (+ js/PI (/ js/PI 2) base-angle)
-          (= x-dir -1) (+ (/ js/PI 2) base-angle)
-          :default base-angle)))
-
-(defn sword-enemy-collision []
-  (doall (map (fn [enemy]
-                #_(js/ellipse (+ 32
-                               (v/x (-> @app-state
-                                        :player
-                                        :pos)))
-                            (+ 32
-                               (v/y (-> @app-state
-                                        :player
-                                        :pos)))
-                            (+ 78 tile-size)
-                            (+ 78 tile-size))
-                (when (aabb? (-> @app-state
-                                 :player
-                                 :pos)
-                             tile-size
-                             (:pos enemy)
-                             tile-size)
-                  ))
-              (:enemies @app-state))))
-
-(defn swing-sword []
-  (when (= :attacking
-           (-> @app-state
-               :player
-               :state))
-    (sword-enemy-collision)
-    (draw-sword (-> @app-state
-                    :player
-                    :pos)
-                (sword-angle (-> @app-state
-                                 :player
-                                 :direction)))
-    (swap! app-state
-           assoc-in
-           [:player :sword :angle]
-           (js/map (js/millis)
-                   (-> @app-state
-                       :player
-                       :sword
-                       :swing-start)
-                   (+ (-> @app-state
-                          :player
-                          :sword
-                          :swing-time)
-                      (-> @app-state
-                          :player
-                          :sword
-                          :swing-start))
-                   0
-                   js/PI)))
-  (when (> (js/millis)
-           (+ (-> @app-state
-                  :player
-                  :sword
-                  :swing-time)
-              (-> @app-state
-                  :player
-                  :sword
-                  :swing-start)))
-    (swap! app-state
-           assoc-in
-           [:player :sword :angle]
-           0)
-    (swap! app-state
-           assoc-in
-           [:player :state]
-           :not-attacking)))
 
 (defn shoot-direction [dir]
   (play-tone-shot)
@@ -883,54 +735,6 @@
           (- (:bounds-y @app-state) (/ height 2) (/ tile-size 2))])
   (particle/player-respawn app-state (v/add [(/ tile-size 2) (/ tile-size 2)]
                                             (:pos (:player @app-state)))))
-
-
-(defn item-player-collision? [item-x item-y]
-  (aabb? [item-x item-y]
-         tile-size
-         tile-size
-         (:pos (player-hit-box))
-         (:width (player-hit-box))
-         (:height (player-hit-box))))
-
-(defn update-shop-keeper-items []
-  (doall (map-indexed (fn [index item]
-                        (when (and (= :heart (:type item))
-                                   (not (:sold? item))
-                                   (>= (:money (:player @app-state))
-                                       (:cost item))
-                                   (< (:health (:player @app-state))
-                                      (:max-health (:player @app-state)))
-                                   (item-player-collision? (v/x (-> @app-state
-                                                                    :shop-keeper
-                                                                    :pos))
-                                                           (+ 64
-                                                              (v/y (-> @app-state
-                                                                       :shop-keeper
-                                                                       :pos)))))
-                          (swap! app-state assoc-in [:shop-keeper :items index :sold?] true)
-                          (swap! app-state update-in [:player :health] + (:heal item))
-                          (swap! app-state update-in [:player :money] - (:cost item))))
-                      (-> @app-state
-                          :shop-keeper
-                          :items))))
-
-(defn draw-shop-keeper-items []
-  (doall (map (fn [item]
-                (when (= :heart (:type item))
-                  (let [x (v/x (-> @app-state
-                                   :shop-keeper
-                                   :pos))
-                        y (+ 64
-                             (v/y (-> @app-state
-                                      :shop-keeper
-                                      :pos)))]
-                    (when (not (:sold? item))
-                      (js/text "     $10\n+1 health" x (+ 64 y))
-                      (draw-heart-item x y)))))
-              (-> @app-state
-                  :shop-keeper
-                  :items))))
 
 (defn update-particles []
   (swap! app-state update :particles #(->> %
