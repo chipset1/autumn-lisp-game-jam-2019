@@ -790,8 +790,6 @@
       (dtext (str "health: " (:health (:player @app-state)) " / 6") 0)
       (draw-health-bar 200 92)))
   (draw-boss-health-bar)
-  (spawn-room)
-  (scroll-to-next-room)
   (when (not (:game-started? @app-state))
     (draw-start-screen))
   (when (:game-completed? @app-state)
@@ -821,6 +819,8 @@
     (draw-player (-> @app-state
                      :player
                      :pos)))
+  (spawn-room)
+  (scroll-to-next-room)
   (update-particles)
   (draw-particles)
   (update-bullets)
