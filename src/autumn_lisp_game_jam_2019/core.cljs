@@ -36,21 +36,11 @@
                    [1 1 1 1 1 1 1 1 1 1 1 1 1 1]
                    ])
 
-(defonce app-state (atom {:characters [{:pos [(- 256 32) (- 256 32)]
-                                        :dialog ["hey this is a game"
-                                                 "go find a way out of the dungeon"]
-                                        :type :character}
-                                       ]
-                          :particles []
+(defonce app-state (atom {:particles []
                           :enemies []
                           :enemy-bullets []
-                          :assets {:images {:fantasy-tileset nil}
-                                   :audio {:shot nil}}
-                          :shop-keeper {:pos [0 0]
-                                        :items [{:heal 1
-                                                 :sold? false
-                                                 :cost 10
-                                                 :type :heart}]}
+                          :assets {:images {}
+                                   :audio {}}
                           :tile-map default-room
                           :tile-map-previous default-room
                           :scroll-start-time 0
@@ -64,16 +54,15 @@
                           :bullets []
                           :bullet-last-time 0
                           :bullet-interval 200
-                          :player {:pos [(- (/ width 2) (/ tile-size 2)) (- (/ height 2) (/ tile-size 2))]
+                          :player {:pos [(- (/ width 2) (/ tile-size 2))
+                                         (- (/ height 2) (/ tile-size 2))]
                                    :health 6
                                    :max-health 6
-                                   :money 0 ; increase once enemy is killed
                                    :direction [0 0]
                                    :sword {:angle 0
                                            :swing-time 100
                                            :swing-start 0}
                                    :state nil}
-                          :dialog-index 0
                           :game-over? false
                           :canvas-scale 1.0
                           :health-dec-interval 1000
