@@ -81,7 +81,7 @@
 (defn play-sound [key]
   (. (sound key) play))
 
-(defn play-tone-shot []
+(defn play-tone-shot-sound []
   (let [tone-shot (nth (sound :tone-shots)
                        (int (js/random 7)))]
     (. tone-shot play)))
@@ -297,7 +297,7 @@
         (> (+ y1 height1) y2))))
 
 (defn shoot-direction [dir]
-  (play-tone-shot)
+  (play-tone-shot-sound)
   (swap! app-state
          update
          :bullets
