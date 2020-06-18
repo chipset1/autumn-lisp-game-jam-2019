@@ -751,9 +751,9 @@
   (js/createCanvas (* width (:canvas-scale @app-state)) (* height (:canvas-scale @app-state)))
   (js/noSmooth)
   (add-image :fantasy-tileset (js/loadImage "/assets/fantasy-tileset-grey-scale.png"))
-  (add-sound :tone-shots (map (fn [i]
-                                (js/loadSound (str "/assets/audio/toneShots/" i ".wav")))
-                              (range 0 7)))
+  (add-sound :tone-shots (doall (map (fn [i]
+                                       (js/loadSound (str "/assets/audio/toneShots/" i ".wav")))
+                                     (range 0 7))))
   (add-sound :explosion (js/loadSound "/assets/audio/explosion.wav"))
   (init-starting-room)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state)))
