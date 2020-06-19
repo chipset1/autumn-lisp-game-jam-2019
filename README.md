@@ -6,7 +6,11 @@ Small Binding of issac clone
 
 Game started as a entry to the autumn lisp game jam. Now is a seperate game.
 
-The main purpose of the game is for me to learn and get back into game developement after a long break.
+The main purpose of the game is for me to learn and get back into game developement.
+
+Sprites from:
+
+https://opengameart.org/content/32x32-fantasy-tileset [CC-BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/)
 
 ## Setup
 
