@@ -1,9 +1,7 @@
 (ns autumn-lisp-game-jam-2019.core
   (:require [autumn-lisp-game-jam-2019.vector :as v]
             [autumn-lisp-game-jam-2019.enemy :as enemy]
-            [autumn-lisp-game-jam-2019.dungeon :as dungeon]
-            [autumn-lisp-game-jam-2019.particle :as particle]
-            ))
+            [autumn-lisp-game-jam-2019.particle :as particle]))
 
 (enable-console-print!)
 
