@@ -798,6 +798,7 @@
   (when (<= (:health (:player @app-state))
             0)
     (swap! app-state assoc :enemies [])
+    (swap! app-state assoc :enemy-bullets [])
     (swap! app-state assoc :game-over? true))
   (when (:game-over? @app-state)
     (js/push)
