@@ -1,7 +1,7 @@
-(ns autumn-lisp-game-jam-2019.core
-  (:require [autumn-lisp-game-jam-2019.vector :as v]
-            [autumn-lisp-game-jam-2019.enemy :as enemy]
-            [autumn-lisp-game-jam-2019.particle :as particle]))
+(ns rabbit-dungeon-shooter.core
+  (:require [rabbit-dungeon-shooter.vector :as v]
+            [rabbit-dungeon-shooter.enemy :as enemy]
+            [rabbit-dungeon-shooter.particle :as particle]))
 
 (enable-console-print!)
 

@@ -1,4 +1,4 @@
-(ns autumn-lisp-game-jam-2019.util)
+(ns rabbit-dungeon-shooter.util)
 
 (defn if-update
   [x pred f]

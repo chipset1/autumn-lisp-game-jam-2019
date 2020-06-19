@@ -1,6 +1,6 @@
-(ns autumn-lisp-game-jam-2019.particle
-  (:require [autumn-lisp-game-jam-2019.vector :as v]
-            [autumn-lisp-game-jam-2019.util :as u]))
+(ns rabbit-dungeon-shooter.particle
+  (:require [rabbit-dungeon-shooter.vector :as v]
+            [rabbit-dungeon-shooter.util :as u]))
 
 (defn create [particle]
   (-> particle

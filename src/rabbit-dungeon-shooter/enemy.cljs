@@ -1,6 +1,6 @@
-(ns autumn-lisp-game-jam-2019.enemy
-  (:require [autumn-lisp-game-jam-2019.vector :as v]
-            [autumn-lisp-game-jam-2019.util :as u]))
+(ns rabbit-dungeon-shooter.enemy
+  (:require [rabbit-dungeon-shooter.vector :as v]
+            [rabbit-dungeon-shooter.util :as u]))
 
 (def enemy-directions [[0 1]
                        [0 -1]

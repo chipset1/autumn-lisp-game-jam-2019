@@ -1,4 +1,4 @@
-(ns autumn-lisp-game-jam-2019.vector)
+(ns rabbit-dungeon-shooter.vector)
 
 
 (defn x [v]
@@ -23,6 +23,12 @@
   [(- (x v1)
       (x v2))
    (- (y v1)
+      (y v2))])
+
+(defn mult-vec [v1 v2]
+  [(* (x v1)
+      (x v2))
+   (* (y v1)
       (y v2))])
 
 (defn mult [s v1]
