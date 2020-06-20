@@ -53,7 +53,8 @@ goog.addDependency("../cljs/repl.js", ['cljs.repl'], ['goog.string', 'cljs.core'
 goog.addDependency("../figwheel/client.js", ['figwheel.client'], ['goog.userAgent.product', 'goog.Uri', 'cljs.core', 'goog.object', 'cljs.core.async', 'figwheel.client.file_reloading', 'figwheel.client.utils', 'cljs.repl', 'figwheel.client.heads_up', 'figwheel.client.socket', 'clojure.string', 'cljs.reader']);
 goog.addDependency("../figwheel/connect.js", ['figwheel.connect'], ['cljs.core', 'figwheel.client']);
 goog.addDependency("../devtools/preload.js", ['devtools.preload'], ['cljs.core', 'devtools.core', 'devtools.prefs']);
-goog.addDependency("../autumn_lisp_game_jam_2019/dungeon.js", ['autumn_lisp_game_jam_2019.dungeon'], ['cljs.core']);
-goog.addDependency("../autumn_lisp_game_jam_2019/vector.js", ['autumn_lisp_game_jam_2019.vector'], ['cljs.core']);
-goog.addDependency("../autumn_lisp_game_jam_2019/enemy.js", ['autumn_lisp_game_jam_2019.enemy'], ['cljs.core', 'autumn_lisp_game_jam_2019.vector']);
-goog.addDependency("../autumn_lisp_game_jam_2019/core.js", ['autumn_lisp_game_jam_2019.core'], ['autumn_lisp_game_jam_2019.dungeon', 'cljs.core', 'autumn_lisp_game_jam_2019.enemy', 'autumn_lisp_game_jam_2019.vector']);
+goog.addDependency("../rabbit_dungeon_shooter/vector.js", ['rabbit_dungeon_shooter.vector'], ['cljs.core']);
+goog.addDependency("../rabbit_dungeon_shooter/util.js", ['rabbit_dungeon_shooter.util'], ['cljs.core']);
+goog.addDependency("../rabbit_dungeon_shooter/particle.js", ['rabbit_dungeon_shooter.particle'], ['rabbit_dungeon_shooter.vector', 'rabbit_dungeon_shooter.util', 'cljs.core']);
+goog.addDependency("../rabbit_dungeon_shooter/enemy.js", ['rabbit_dungeon_shooter.enemy'], ['rabbit_dungeon_shooter.vector', 'rabbit_dungeon_shooter.util', 'cljs.core']);
+goog.addDependency("../rabbit_dungeon_shooter/core.js", ['rabbit_dungeon_shooter.core'], ['rabbit_dungeon_shooter.vector', 'cljs.core', 'rabbit_dungeon_shooter.particle', 'rabbit_dungeon_shooter.enemy']);
