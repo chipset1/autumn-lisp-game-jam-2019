@@ -31,7 +31,7 @@
 
                 :compiler {:main rabbit-dungeon-shooter.core
                            :asset-path "js/compiled/out"
-                           :output-to "resources/public/js/compiled/rabbit-dungeon-shooter.js"
+                           :output-to "resources/public/js/compiled/rabbit_dungeon_shooter.js"
                            :output-dir "resources/public/js/compiled/out"
                            :source-map-timestamp true
                            ;; To console.log CLJS data-structures make sure you enable devtools in Chrome
@@ -42,7 +42,7 @@
                ;; lein cljsbuild once min
                {:id "min"
                 :source-paths ["src"]
-                :compiler {:output-to "resources/public/js/compiled/rabbit-dungeon-shooter.js"
+                :compiler {:output-to "resources/public/js/compiled/rabbit_dungeon_shooter.js"
                            :main rabbit-dungeon-shooter.core
                            :optimizations :advanced
                            :pretty-print false}}]}
