@@ -1,4 +1,4 @@
-# autumn-lisp-game-jam-2019
+# rabbit-dungeon-shooter
 
 Small Binding of issac clone
 
