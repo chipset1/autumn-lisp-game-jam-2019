@@ -11,6 +11,7 @@
 (def height (* 9 tile-size))
 (def player-speed 5)
 (def player-size 64)
+(def player-bullet-speed 15)
 (def bullet-size 10)
 (def door-spawn-chance 0.5)
 (def corner-positions [[tile-size tile-size]
@@ -405,7 +406,7 @@
            (map (fn [b]
                   (assoc b
                          :pos
-                         (v/add (:pos b) (v/mult 15 (:direction b)))))
+                         (v/add (:pos b) (v/mult player-bullet-speed (:direction b)))))
                 bullets))))
 
 (defn display-bullets [bullet-key]
