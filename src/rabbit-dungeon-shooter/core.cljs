@@ -631,9 +631,9 @@
     (on-room-spawn)
     (add-door-left)
     (shift-left)
-    (when (< door-spawn-chance (js/random)) (add-door-right))
-    (when (< door-spawn-chance (js/random)) (add-door-top))
-    (when (< door-spawn-chance (js/random)) (add-door-bottom))
+    (when (< (js/random) door-spawn-chance) (add-door-right))
+    (when (< (js/random) door-spawn-chance) (add-door-top))
+    (when (< (js/random) door-spawn-chance) (add-door-bottom))
     (after-room-spawn))
   (when (< (+ (-> @app-state
                   :player
@@ -645,9 +645,9 @@
     (on-room-spawn)
     (add-door-right)
     (shift-right)
-    (when (< door-spawn-chance (js/random)) (add-door-left))
-    (when (< door-spawn-chance (js/random)) (add-door-top))
-    (when (< door-spawn-chance (js/random)) (add-door-bottom))
+    (when (< (js/random) door-spawn-chance) (add-door-left))
+    (when (< (js/random) door-spawn-chance) (add-door-top))
+    (when (< (js/random) door-spawn-chance) (add-door-bottom))
     (after-room-spawn))
   (when (> (-> @app-state
                :player
@@ -658,9 +658,9 @@
     (on-room-spawn)
     (add-door-top)
     (shift-up)
-    (when (< door-spawn-chance (js/random)) (add-door-left))
-    (when (< door-spawn-chance (js/random)) (add-door-right))
-    (when (< door-spawn-chance (js/random)) (add-door-bottom))
+    (when (< (js/random) door-spawn-chance) (add-door-left))
+    (when (< (js/random) door-spawn-chance) (add-door-right))
+    (when (< (js/random) door-spawn-chance) (add-door-bottom))
     (after-room-spawn))
   (when (< (+ (-> @app-state
                   :player
@@ -672,9 +672,9 @@
     (on-room-spawn)
     (add-door-bottom)
     (shift-down)
-    (when (< door-spawn-chance (js/random)) (add-door-left))
-    (when (< door-spawn-chance (js/random)) (add-door-right))
-    (when (< door-spawn-chance (js/random)) (add-door-top))
+    (when (< (js/random) door-spawn-chance) (add-door-left))
+    (when (< (js/random) door-spawn-chance) (add-door-right))
+    (when (< (js/random) door-spawn-chance) (add-door-top))
     (after-room-spawn)))
 
 (defn init-starting-room []
