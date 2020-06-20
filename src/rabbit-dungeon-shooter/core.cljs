@@ -639,7 +639,7 @@
                   :player
                   :pos
                   v/x)
-              64)
+              player-size)
            (- (:bounds-x @app-state) width))
     (swap! app-state assoc :bounds-x (- (:bounds-x @app-state) width))
     (on-room-spawn)
@@ -666,7 +666,7 @@
                   :player
                   :pos
                   v/y)
-              64)
+              player-size)
            (- (:bounds-y @app-state) height))
     (swap! app-state assoc :bounds-y (- (:bounds-y @app-state) height))
     (on-room-spawn)
