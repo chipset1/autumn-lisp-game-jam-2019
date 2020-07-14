@@ -1,6 +1,6 @@
 # rabbit-dungeon-shooter
 
-Small Binding of issac clone made with clojurescript
+Small Binding of issac clone made with Clojurescript
 
 ## Overview
 
