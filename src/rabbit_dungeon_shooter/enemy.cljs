@@ -26,7 +26,8 @@
 (defn create-enemy [app-state pos type]
   (cond (= :diagonal-move type)
         {:pos pos
-         :image-type :spider
+         :sprite-sheet {:col 3
+                        :row 19}
          :diagonal-move {:interval 500
                          :speed 4
                          :current-direction (random-diagonal-direction)
@@ -34,7 +35,8 @@
         (= :rotate-and-shoot type)
         {:pos pos
          :health 100
-         :image-type :eye-monster
+         :sprite-sheet {:col 7
+                        :row 21}
          :on-player-hit :do-not-die
          :type :final-boss
          :size (* (:enemy-size @app-state) 2)
@@ -52,7 +54,8 @@
         (= :sit-and-shoot type)
         {:pos pos
          :health 10
-         :image-type :sorcerer
+         :sprite-sheet {:col 6
+                        :row 18}
          :on-player-hit :do-not-die
          :shoot-player {:shoot-time (js/millis)
                         :offset [0 0]
@@ -60,14 +63,16 @@
                         :interval 1000}}
         (= :rotate-seek type)
         {:pos pos
-         :image-type :ghoul
+         :sprite-sheet {:col 6
+                        :row 21}
          :seek {:speed 1}
          :rotate {:radius 4
                   :theta (js/random js/TWO_PI)
                   :theta-vel 0.03}}
         (= :udlr-shoot type)
         {:pos pos
-         :image-type :archer
+         :sprite-sheet {:col 4
+                        :row 18}
          :udlr {:move-time (js/millis)
                 :speed 3
                 :move-interval 1500
@@ -77,14 +82,16 @@
                         :interval 1000}}
         (= :udlr type)
         {:pos pos
-         :image-type :skeleton
+         :sprite-sheet {:col 2
+                        :row 22}
          :udlr {:move-time (js/millis)
                 :speed 4.5
                 :move-interval 400
                 :current-direction (random-direction)}}
         (= :seek type)
         {:pos pos
-         :image-type :hedge-hog
+         :sprite-sheet {:col 6
+                        :row 20}
          :seek {:speed 2}}))
 
 (defn udlr-update-move-time [enemy]
