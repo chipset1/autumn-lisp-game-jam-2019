@@ -121,91 +121,22 @@
        (player-image))
      (player-image))))
 
-(defn draw-enemy-image [[x y] size type]
-  (cond (= :spider type)
-        (js/image (image :fantasy-tileset)
-                  x
-                  y
-                  size
-                  size
-                  (* 3 32)
-                  (* 19 32)
-                  32
-                  32)
-        (= :archer type)
-        (js/image (image :fantasy-tileset)
-                  x
-                  y
-                  size
-                  size
-                  (* 4 32)
-                  (* 18 32)
-                  32
-                  32)
-        (= :ghoul type)
-        (js/image (image :fantasy-tileset)
-                  x
-                  y
-                  size
-                  size
-                  (* 6 32)
-                  (* 21 32)
-                  32
-                  32)
-        (= :sorcerer type)
-        (js/image (image :fantasy-tileset)
-                  x
-                  y
-                  size
-                  size
-                  (* 6 32)
-                  (* 18 32)
-                  32
-                  32)
-        (= :hedge-hog type)
-        (js/image (image :fantasy-tileset)
-                  x
-                  y
-                  size
-                  size
-                  (* 6 32)
-                  (* 20 32)
-                  32
-                  32)
-        (= :skeleton type)
-        (js/image (image :fantasy-tileset)
-                  x
-                  y
-                  size
-                  size
-                  (* 2 32)
-                  (* 22 32)
-                  32
-                  32)
-        (= :eye-monster type)
-        (js/image (image :fantasy-tileset)
-                  x
-                  y
-                  size
-                  size
-                  (* 7 32)
-                  (* 21 32)
-                  32
-                  32)
-        :else
-        (js/image (image :fantasy-tileset)
-                  x
-                  y
-                  size
-                  size
-                  (* 2 32)
-                  (* 22 32)
-                  32
-                  32)))
-
 (defn draw-enemy [e]
   ;; (js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
-  (draw-enemy-image (:pos e) (:size e) (:image-type e)))
+  (let [[x y] (:pos e)
+        size (:size e)
+        sprite-col (:col (:sprite-sheet e))
+        sprite-row (:row (:sprite-sheet e))
+        sprite-size 32]
+    (js/image (image :fantasy-tileset)
+             x
+             y
+             size
+             size
+             (* sprite-col sprite-size)
+             (* sprite-row sprite-size)
+             sprite-size
+             sprite-size)))
 
 (defn player-hit-box
   ([]
