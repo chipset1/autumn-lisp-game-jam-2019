@@ -1,6 +1,8 @@
 # rabbit-dungeon-shooter
 
-Small Binding of issac clone made with Clojurescript
+Small Binding of Issac clone made with Clojurescript
+
+Play it here: https://chipset.itch.io/rds
 
 ## Overview
 
