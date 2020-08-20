@@ -456,8 +456,7 @@
   (doall (map (fn [e]
                 (when (<= (:health e) 0)
                   (particle/enemy-dead app-state (:pos e))
-                  (play-sound :explosion)
-                  (swap! app-state update-in [:player :money] inc)))
+                  (play-sound :explosion)))
               (:enemies @app-state)))
   (when (and (<= (:health (first (:enemies @app-state)))
                  0)
@@ -474,7 +473,6 @@
   (dungeon/init-starting-room app-state)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
   (swap! app-state assoc-in [:player :health] (:max-health (:player @app-state)))
-  (swap! app-state assoc-in [:player :money] 0)
   (swap! app-state assoc :enemies [])
   (swap! app-state assoc :enemy-index -1)
   (swap! app-state
