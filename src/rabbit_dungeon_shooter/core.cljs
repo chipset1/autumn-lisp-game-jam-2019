@@ -1,6 +1,7 @@
 (ns rabbit-dungeon-shooter.core
   (:require [rabbit-dungeon-shooter.vector :as v]
             [rabbit-dungeon-shooter.enemy :as enemy]
+            [rabbit-dungeon-shooter.dungeon :as dungeon]
             [rabbit-dungeon-shooter.particle :as particle]))
 
 (enable-console-print!)
@@ -10,10 +11,8 @@
 (def width (* 14 tile-size))
 (def height (* 9 tile-size))
 (def player-speed 5)
-(def player-size 64)
 (def player-bullet-speed 15)
 (def bullet-size 10)
-(def door-spawn-chance 0.5)
 (def corner-positions [[tile-size tile-size]
                        [(- width (* tile-size 2)) tile-size]
                        [tile-size (- height (* tile-size 2))]
@@ -39,8 +38,12 @@
                           :enemy-bullets []
                           :assets {:images {}
                                    :audio {}}
+                          :width width
+                          :height height
                           :tile-map default-room
                           :tile-map-previous default-room
+                          :default-room default-room
+                          :door-spawn-chance 0.5
                           :scroll-start-time 0
                           :scroll-interval 350
                           :scroll-target-min-x 0
@@ -67,6 +70,7 @@
                           :invulnerable-flash-interval 125
                           :enemy-index -1
                           :enemy-size tile-size
+                          :player-size tile-size
                           :game-started? false
                           :game-completed? false}))
 
@@ -105,8 +109,8 @@
   (let [player-image #(js/image (image :fantasy-tileset)
                                 x
                                 y
-                                player-size
-                                player-size
+                                (:player-size app-state)
+                                (:player-size app-state)
                                 32
                                 (* 20 32)
                                 32
@@ -153,8 +157,8 @@
          offset-y 12]
      {:pos [(+ x offset-x)
            (+ y offset-y)]
-     :width (- player-size (* offset-x 2))
-     :height (- player-size (* offset-y 2))})))
+      :width (- (:player-size app-state) (* offset-x 2))
+      :height (- (:player-size app-state) (* offset-y 2))})))
 
 (defn draw-tile-map [tile-map-key offset-x offset-y]
   (doall (map-indexed (fn [i row]
@@ -350,89 +354,6 @@
                          bullet-size))
               (bullet-key @app-state))))
 
-(defn add-door-right []
-  (swap! app-state assoc-in [:tile-map 3 13] 0)
-  (swap! app-state assoc-in [:tile-map 4 13] 0)
-  (swap! app-state assoc-in [:tile-map 5 13] 0))
-
-(defn add-door-left []
-  (swap! app-state assoc-in [:tile-map 3 0] 0)
-  (swap! app-state assoc-in [:tile-map 4 0] 0)
-  (swap! app-state assoc-in [:tile-map 5 0] 0))
-
-(defn add-door-top []
-  (swap! app-state assoc-in [:tile-map 0 6] 0)
-  (swap! app-state assoc-in [:tile-map 0 7] 0))
-
-(defn add-door-bottom []
-  (swap! app-state assoc-in [:tile-map 8 6] 0)
-  (swap! app-state assoc-in [:tile-map 8 7] 0))
-
-(defn shift-left []
-  (swap! app-state assoc-in [:player :state] :scrolling-x)
-  (swap! app-state assoc :scroll-target-min-y 0)
-  (swap! app-state assoc :scroll-target-min-x width)
-  (swap! app-state assoc :scroll-start-time (js/millis))
-  )
-
-(defn shift-right []
-  (swap! app-state assoc-in [:player :state] :scrolling-x)
-  (swap! app-state assoc :scroll-target-min-y 0)
-  (swap! app-state assoc :scroll-target-min-x (- width))
-  (swap! app-state assoc :scroll-start-time (js/millis))
-  )
-
-(defn shift-up []
-  (swap! app-state assoc-in [:player :state] :scrolling-y)
-  (swap! app-state assoc :scroll-target-min-x 0)
-  (swap! app-state assoc :scroll-target-min-y height)
-  (swap! app-state assoc :scroll-start-time (js/millis))
-  )
-
-(defn shift-down []
-  (swap! app-state assoc-in [:player :state] :scrolling-y)
-  (swap! app-state assoc :scroll-target-min-x 0)
-  (swap! app-state assoc :scroll-target-min-y (- height))
-  (swap! app-state assoc :scroll-start-time (js/millis))
-  )
-
-(defn scroll-to-next-room []
-  (when (= :scrolling-y
-           (-> @app-state
-               :player
-               :state))
-    (swap! app-state
-           assoc
-           :scroll-y
-           (js/map (js/millis)
-                   (:scroll-start-time @app-state)
-                   (+ (:scroll-start-time @app-state)
-                      (:scroll-interval @app-state))
-                   (:scroll-target-min-y @app-state)
-                   0)))
-  (when (= :scrolling-x
-           (-> @app-state
-               :player
-               :state))
-    (swap! app-state
-           assoc
-           :scroll-x
-           (js/map (js/millis)
-                   (:scroll-start-time @app-state)
-                   (+ (:scroll-start-time @app-state)
-                      (:scroll-interval @app-state))
-                   (:scroll-target-min-x @app-state)
-                   0)))
-  (when (> (js/millis)
-           (+ (:scroll-start-time @app-state)
-              (:scroll-interval @app-state)))
-    (swap! app-state assoc :scroll-x 0)
-    (swap! app-state assoc :scroll-y 0)
-    (swap! app-state
-           assoc-in
-           [:player :state]
-           :not-scrolling)))
-
 (defn add-enemy!
   "adds enemy at screen coordinates"
   [screen-x screen-y type]
@@ -491,6 +412,14 @@
         (> y (:bounds-y @app-state))
         (< y (- (:bounds-y @app-state) height size)))))
 
+(defn after-room-spawn
+  "function passed into 'spawn-room' to be called after room is spawned"
+  []
+  (when (<= (count (:enemies @app-state)) 0)
+    (swap! app-state update :enemy-index inc))
+  (swap! app-state assoc :enemies [])
+  (spawn-enemies))
+
 (defn update-enemies []
   (when (and (not= :scrolling-x
                (-> @app-state
@@ -541,82 +470,8 @@
                            (or (enemy-out-of-room? e)
                                (<= (:health e) 0))))))
 
-(defn on-room-spawn []
-  (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
-  (swap! app-state assoc :tile-map default-room))
-
-(defn after-room-spawn []
-  (when (<= (count (:enemies @app-state)) 0)
-    (swap! app-state update :enemy-index inc))
-  (swap! app-state assoc :enemies [])
-  (spawn-enemies))
-
-(defn spawn-room
-  "update bounds, reset tile-map to default room, create door where entered, randomly create other doors"
-  []
-  (when (> (-> @app-state
-               :player
-               :pos
-               v/x)
-           (:bounds-x @app-state))
-    (swap! app-state assoc :bounds-x (+ width (:bounds-x @app-state)))
-    (on-room-spawn)
-    (add-door-left)
-    (shift-left)
-    (when (< (js/random) door-spawn-chance) (add-door-right))
-    (when (< (js/random) door-spawn-chance) (add-door-top))
-    (when (< (js/random) door-spawn-chance) (add-door-bottom))
-    (after-room-spawn))
-  (when (< (+ (-> @app-state
-                  :player
-                  :pos
-                  v/x)
-              player-size)
-           (- (:bounds-x @app-state) width))
-    (swap! app-state assoc :bounds-x (- (:bounds-x @app-state) width))
-    (on-room-spawn)
-    (add-door-right)
-    (shift-right)
-    (when (< (js/random) door-spawn-chance) (add-door-left))
-    (when (< (js/random) door-spawn-chance) (add-door-top))
-    (when (< (js/random) door-spawn-chance) (add-door-bottom))
-    (after-room-spawn))
-  (when (> (-> @app-state
-               :player
-               :pos
-               v/y)
-           (:bounds-y @app-state))
-    (swap! app-state assoc :bounds-y (+ height (:bounds-y @app-state)))
-    (on-room-spawn)
-    (add-door-top)
-    (shift-up)
-    (when (< (js/random) door-spawn-chance) (add-door-left))
-    (when (< (js/random) door-spawn-chance) (add-door-right))
-    (when (< (js/random) door-spawn-chance) (add-door-bottom))
-    (after-room-spawn))
-  (when (< (+ (-> @app-state
-                  :player
-                  :pos
-                  v/y)
-              player-size)
-           (- (:bounds-y @app-state) height))
-    (swap! app-state assoc :bounds-y (- (:bounds-y @app-state) height))
-    (on-room-spawn)
-    (add-door-bottom)
-    (shift-down)
-    (when (< (js/random) door-spawn-chance) (add-door-left))
-    (when (< (js/random) door-spawn-chance) (add-door-right))
-    (when (< (js/random) door-spawn-chance) (add-door-top))
-    (after-room-spawn)))
-
-(defn init-starting-room []
-  (add-door-right)
-  (add-door-left)
-  (add-door-top)
-  (add-door-bottom))
-
 (defn reset-level []
-  (init-starting-room)
+  (dungeon/init-starting-room app-state)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
   (swap! app-state assoc-in [:player :health] (:max-health (:player @app-state)))
   (swap! app-state assoc-in [:player :money] 0)
@@ -685,7 +540,7 @@
                                        (js/loadSound (str "assets/audio/toneShots/" i ".wav")))
                                      (range 0 7))))
   (add-sound :explosion (js/loadSound "assets/audio/explosion.wav"))
-  (init-starting-room)
+  (dungeon/init-starting-room app-state)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state)))
 
 (defn draw []
@@ -750,8 +605,8 @@
     (draw-player (-> @app-state
                      :player
                      :pos)))
-  (spawn-room)
-  (scroll-to-next-room)
+  (dungeon/spawn-room app-state after-room-spawn)
+  (dungeon/scroll-to-next-room app-state)
   (update-particles)
   (draw-particles)
   (update-bullets)
