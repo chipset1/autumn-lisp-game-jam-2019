@@ -109,8 +109,8 @@
   (let [player-image #(js/image (image :fantasy-tileset)
                                 x
                                 y
-                                (:player-size app-state)
-                                (:player-size app-state)
+                                (:player-size @app-state)
+                                (:player-size @app-state)
                                 32
                                 (* 20 32)
                                 32
