@@ -1,6 +1,8 @@
 (ns rabbit-dungeon-shooter.player
   (:require [rabbit-dungeon-shooter.vector :as v]
-            [rabbit-dungeon-shooter.dungeon :as dungeon]))
+            [rabbit-dungeon-shooter.dungeon :as dungeon]
+            [rabbit-dungeon-shooter.draw :as draw]
+            [rabbit-dungeon-shooter.assets :as assets]))
 
 (defn hit-box
   ([app-state]
@@ -58,13 +60,39 @@
   (when (js/keyIsDown 68)
     (move-player app-state [1 0])))
 
-(defn draw-and-update [app-state shoot draw-player]
+(defn shoot-direction [app-state dir]
+  (assets/play-tone-shot-sound app-state)
+  (swap! app-state
+         update
+         :bullets
+         conj
+         {:pos (v/add (-> @app-state
+                          :player
+                          :pos)
+                      [(/ (:player-size @app-state) 2) (/ (:player-size @app-state) 2)])
+          :direction dir}))
+
+(defn shoot [app-state]
+  (when (> (- (js/millis)
+              (:bullet-last-time @app-state))
+           (:bullet-interval @app-state))
+    (swap! app-state assoc :bullet-last-time (js/millis))
+    (let [kd js/keyIsDown
+          shoot-dir (partial shoot-direction app-state)]
+      (cond (and (kd js/UP_ARROW) (kd js/LEFT_ARROW)) (shoot-dir [-1 -1])
+           (and (kd js/UP_ARROW) (kd js/RIGHT_ARROW)) (shoot-dir [1 -1])
+           (and (kd js/DOWN_ARROW) (kd js/LEFT_ARROW)) (shoot-dir [-1 1])
+           (and (kd js/DOWN_ARROW) (kd js/RIGHT_ARROW)) (shoot-dir [1 1])
+           (kd js/UP_ARROW) (shoot-dir [0 -1])
+           (kd js/DOWN_ARROW) (shoot-dir [0 1])
+           (kd js/LEFT_ARROW) (shoot-dir [-1 0])
+           (kd js/RIGHT_ARROW) (shoot-dir [1 0])))))
+
+(defn draw-and-update [app-state]
   (when (and (:game-started? @app-state)
              (not (:game-over? @app-state)))
     (when (not (or (= :scrolling-x (:state (:player @app-state)))
                    (= :scrolling-y (:state (:player @app-state)))))
       (player-movement app-state))
-    (shoot)
-    (draw-player (-> @app-state
-                     :player
-                     :pos))))
+    (shoot app-state)
+    (draw/player app-state)))

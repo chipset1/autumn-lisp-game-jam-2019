@@ -3,7 +3,10 @@
             [rabbit-dungeon-shooter.enemy :as enemy]
             [rabbit-dungeon-shooter.player :as player]
             [rabbit-dungeon-shooter.dungeon :as dungeon]
-            [rabbit-dungeon-shooter.particle :as particle]))
+            [rabbit-dungeon-shooter.particle :as particle]
+            [rabbit-dungeon-shooter.assets :as assets]
+            [rabbit-dungeon-shooter.draw :as draw]
+            ))
 
 (enable-console-print!)
 
@@ -76,81 +79,6 @@
                           :game-started? false
                           :game-completed? false}))
 
-(defn add-sound [key sound]
-  (swap! app-state assoc-in [:assets :audio key] sound))
-
-(defn sound [key]
-  (get-in @app-state [:assets :audio key]))
-
-(defn play-sound [key]
-  (. (sound key) play))
-
-(defn play-tone-shot-sound []
-  (let [tone-shot (nth (sound :tone-shots)
-                       (int (js/random 7)))]
-    (. tone-shot play)))
-
-(defn add-image [key image]
-  (swap! app-state assoc-in [:assets :images key] image))
-
-(defn image [key]
-  (get-in @app-state [:assets :images key]))
-
-(defn draw-wall-tile [x y]
-  (js/image (image :fantasy-tileset)
-            x
-            y
-            tile-size
-            tile-size
-            64
-            64
-            32
-            32))
-
-(defn draw-player [[x y]]
-  (let [player-image #(js/image (image :fantasy-tileset)
-                                x
-                                y
-                                (:player-size @app-state)
-                                (:player-size @app-state)
-                                32
-                                (* 20 32)
-                                32
-                                32)]
-    (if (< (- (js/millis)
-             (:health-dec-time @app-state))
-          (:health-dec-interval @app-state))
-     (when (> (- (js/millis)
-                 (:invulnerable-flash-time @app-state))
-              (:invulnerable-flash-interval @app-state))
-       (swap! app-state assoc :invulnerable-flash-time (js/millis))
-       (player-image))
-     (player-image))))
-
-(defn draw-enemy [e]
-  ;; (js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
-  (let [[x y] (:pos e)
-        size (:size e)
-        sprite-col (:col (:sprite-sheet e))
-        sprite-row (:row (:sprite-sheet e))
-        sprite-size 32]
-    (js/image (image :fantasy-tileset)
-             x
-             y
-             size
-             size
-             (* sprite-col sprite-size)
-             (* sprite-row sprite-size)
-             sprite-size
-             sprite-size)))
-
-(defn draw-tile-map [tile-map-key offset-x offset-y]
-  (doall (map-indexed (fn [i row]
-                        (doall (map-indexed (fn [j tile]
-                                              (when (= tile 1)
-                                                (draw-wall-tile (+ offset-x (* j tile-size)) (+ offset-y (* i tile-size)))))
-                                            row)))
-                      (tile-map-key @app-state))))
 
 (defn tile-map-collision? [pos size]
   (let [left (v/x pos)
@@ -170,32 +98,6 @@
         (< y1 (+ y2 height2))
         (> (+ y1 height1) y2))))
 
-(defn shoot-direction [dir]
-  (play-tone-shot-sound)
-  (swap! app-state
-         update
-         :bullets
-         conj
-         {:pos (v/add (-> @app-state
-                          :player
-                          :pos)
-                      [(/ tile-size 2) (/ tile-size 2)])
-          :direction dir}))
-
-(defn shoot []
-  (when (> (- (js/millis)
-              (:bullet-last-time @app-state))
-           (:bullet-interval @app-state))
-    (swap! app-state assoc :bullet-last-time (js/millis))
-    (let [kd js/keyIsDown]
-      (cond (and (kd js/UP_ARROW) (kd js/LEFT_ARROW)) (shoot-direction [-1 -1])
-           (and (kd js/UP_ARROW) (kd js/RIGHT_ARROW)) (shoot-direction [1 -1])
-           (and (kd js/DOWN_ARROW) (kd js/LEFT_ARROW)) (shoot-direction [-1 1])
-           (and (kd js/DOWN_ARROW) (kd js/RIGHT_ARROW)) (shoot-direction [1 1])
-           (kd js/UP_ARROW) (shoot-direction [0 -1])
-           (kd js/DOWN_ARROW) (shoot-direction [0 1])
-           (kd js/LEFT_ARROW) (shoot-direction [-1 0])
-           (kd js/RIGHT_ARROW) (shoot-direction [1 0])))))
 
 (defn bullet-hit-enemy? [b]
   (some (fn [e]
@@ -222,7 +124,7 @@
     (swap! app-state assoc :health-dec-time (js/millis))
     (swap! app-state update-in [:player :health] #(js/max (dec %) 0)))
   (when (<= (:health (:player @app-state)) 0)
-    (play-sound :explosion)
+    (assets/play-sound app-state :explosion)
     (particle/enemy-dead app-state (:pos (:player @app-state)))))
 
 (defn bullet-particles []
@@ -397,7 +299,7 @@
   (doall (map (fn [e]
                 (when (<= (:health e) 0)
                   (particle/enemy-dead app-state (:pos e))
-                  (play-sound :explosion)
+                  (assets/play-sound app-state :explosion)
                   ))
               (:enemies @app-state)))
   (when (and (<= (:health (first (:enemies @app-state)))
@@ -475,11 +377,11 @@
 (defn setup []
   (js/createCanvas (* width (:canvas-scale @app-state)) (* height (:canvas-scale @app-state)))
   (js/noSmooth)
-  (add-image :fantasy-tileset (js/loadImage "assets/fantasy-tileset-grey-scale.png"))
-  (add-sound :tone-shots (doall (map (fn [i]
+  (assets/add-image app-state :fantasy-tileset (js/loadImage "assets/fantasy-tileset-grey-scale.png"))
+  (assets/add-sound app-state :tone-shots (doall (map (fn [i]
                                        (js/loadSound (str "assets/audio/toneShots/" i ".wav")))
                                      (range 0 7))))
-  (add-sound :explosion (js/loadSound "assets/audio/explosion.wav"))
+  (assets/add-sound app-state :explosion (js/loadSound "assets/audio/explosion.wav"))
   (dungeon/init-starting-room app-state)
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state)))
 
@@ -538,7 +440,7 @@
                 (+ (:scroll-y @app-state)
                    (- (- (:bounds-y @app-state) height))))
 
-  (player/draw-and-update app-state shoot draw-player)
+  (player/draw-and-update app-state)
   (dungeon/spawn-room app-state after-room-spawn)
   (dungeon/scroll-to-next-room app-state)
   (update-particles)
@@ -548,12 +450,14 @@
   (display-bullets :bullets)
   (display-bullets :enemy-bullets)
   (update-enemies)
-  (doall (map #(draw-enemy %)
+  (doall (map #(draw/enemy app-state %)
               (:enemies @app-state)))
-  (draw-tile-map :tile-map
+  (draw/tile-map app-state
+                 :tile-map
                  (- (:bounds-x @app-state) width)
                  (- (:bounds-y @app-state) height))
-  (draw-tile-map :tile-map-previous
+  (draw/tile-map app-state
+                 :tile-map-previous
                  (- (- (:bounds-x @app-state) width)
                     (:scroll-target-min-x @app-state))
                  (- (- (:bounds-y @app-state) height)
@@ -571,12 +475,12 @@
     (js/resizeCanvas (* width (:canvas-scale @app-state))
                      (* height (:canvas-scale @app-state))))
   (when (and (= js/key "r") (not (:game-started? @app-state)))
-    (play-sound :explosion)
+    (assets/play-sound app-state :explosion)
     (particle/player-respawn app-state (v/add [(/ tile-size 2) (/ tile-size 2)]
                                               (:pos (:player @app-state))))
     (swap! app-state assoc :game-started? true))
   (when (and (:game-over? @app-state) (= js/key "r"))
-    (play-sound :explosion)
+    (assets/play-sound app-state :explosion)
     (swap! app-state assoc :game-over? false)
     (reset-level)))
 
