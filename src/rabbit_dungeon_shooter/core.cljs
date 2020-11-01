@@ -1,6 +1,7 @@
 (ns rabbit-dungeon-shooter.core
   (:require [rabbit-dungeon-shooter.vector :as v]
             [rabbit-dungeon-shooter.enemy :as enemy]
+            [rabbit-dungeon-shooter.player :as player]
             [rabbit-dungeon-shooter.dungeon :as dungeon]
             [rabbit-dungeon-shooter.particle :as particle]))
 
@@ -10,7 +11,6 @@
 (def tile-size 64)
 (def width (* 14 tile-size))
 (def height (* 9 tile-size))
-(def player-speed 5)
 (def player-bullet-speed 15)
 (def bullet-size 10)
 (def corner-positions [[tile-size tile-size]
@@ -58,6 +58,7 @@
                           :player {:pos [(- (/ width 2) (/ tile-size 2))
                                          (- (/ height 2) (/ tile-size 2))]
                                    :health 6
+                                   :speed 5
                                    :max-health 6
                                    :direction [0 0]
                                    :sword {:angle 0
@@ -71,6 +72,7 @@
                           :enemy-index -1
                           :enemy-size tile-size
                           :player-size tile-size
+                          :tile-size tile-size
                           :game-started? false
                           :game-completed? false}))
 
@@ -142,24 +144,6 @@
              sprite-size
              sprite-size)))
 
-(defn player-hit-box
-  ([]
-   (player-hit-box (:pos (:player @app-state))))
-  ([[x y]]
-   ;; (js/push)
-   ;; (js/fill 255 0 255 10)
-   ;; (js/rect (+ (v/x (:pos (:player @app-state))) 16)
-   ;;          (+ (v/y (:pos (:player @app-state))) 12)
-   ;;          (- player-size 32)
-   ;;          (- player-size 24))
-   ;; (js/pop)
-   (let [offset-x 16
-         offset-y 12]
-     {:pos [(+ x offset-x)
-           (+ y offset-y)]
-      :width (- (:player-size app-state) (* offset-x 2))
-      :height (- (:player-size app-state) (* offset-y 2))})))
-
 (defn draw-tile-map [tile-map-key offset-x offset-y]
   (doall (map-indexed (fn [i row]
                         (doall (map-indexed (fn [j tile]
@@ -168,58 +152,15 @@
                                             row)))
                       (tile-map-key @app-state))))
 
-(defn solid-tile? [x y]
-  (let [col (js/floor (/ (- x (- (:bounds-x @app-state) width))
-                         tile-size))
-        row (js/floor (/ (- y (- (:bounds-y @app-state) height))
-                         tile-size))]
-    (= 1 (get-in (:tile-map @app-state) [row col]))))
-
-(defn player-tile-map-collision?
-  [pos]
-  (let [left (v/x (:pos (player-hit-box pos)))
-        right (+ (v/x (:pos (player-hit-box pos)))
-                 (:width (player-hit-box pos)))
-        top (v/y (:pos (player-hit-box pos)))
-        bottom (+ (v/y (:pos (player-hit-box pos)))
-                  (:height (player-hit-box pos)))]
-    (or (solid-tile? left top)
-        (solid-tile? left bottom)
-        (solid-tile? right top)
-        (solid-tile? right bottom))))
-
 (defn tile-map-collision? [pos size]
   (let [left (v/x pos)
         right (+ (v/x pos) size)
         top (v/y pos)
         bottom (+ (v/y pos) size)]
-    (or (solid-tile? left top)
-        (solid-tile? left bottom)
-        (solid-tile? right top)
-        (solid-tile? right bottom))))
-
-(defn new-player-position [player-pos vel]
-  (let [new-pos (v/add player-pos vel)]
-    (if (player-tile-map-collision? new-pos)
-      player-pos
-      new-pos)))
-
-(defn move-player [vel-direction]
-  (swap! app-state
-         update-in
-         [:player :pos]
-         new-player-position
-         (v/mult player-speed vel-direction)))
-
-(defn player-movement []
-  (when (js/keyIsDown 87)
-    (move-player [0 -1]))
-  (when (js/keyIsDown 83)
-    (move-player [0 1]))
-  (when (js/keyIsDown 65)
-    (move-player [-1 0]))
-  (when (js/keyIsDown 68)
-    (move-player [1 0])))
+    (or (dungeon/solid-tile? app-state left top)
+        (dungeon/solid-tile? app-state left bottom)
+        (dungeon/solid-tile? app-state right top)
+        (dungeon/solid-tile? app-state right bottom))))
 
 (defn aabb?
   ([pos1 size1 pos2 size2] (aabb? pos1 size1 size1 pos2 size2 size2))
@@ -297,9 +238,9 @@
                 (when (aabb? (:pos b)
                              bullet-size
                              bullet-size
-                             (:pos (player-hit-box))
-                             (:width (player-hit-box))
-                             (:height (player-hit-box)))
+                             (:pos (player/hit-box app-state))
+                             (:width (player/hit-box app-state))
+                             (:height (player/hit-box app-state)))
                   (particle/bullet-explode app-state (:pos b))
                   (dec-player-health)))
               (:enemy-bullets @app-state)))
@@ -311,9 +252,9 @@
                                (aabb? (:pos b)
                                       bullet-size
                                       bullet-size
-                                      (:pos (player-hit-box))
-                                      (:width (player-hit-box))
-                                      (:height (player-hit-box)))
+                                      (:pos (player/hit-box app-state))
+                                      (:width (player/hit-box app-state))
+                                      (:height (player/hit-box app-state)))
                                (tile-map-collision? (:pos b) bullet-size)))))
   (swap! app-state
          update
@@ -442,9 +383,9 @@
                         (cond (aabb? (:pos e)
                                      (:size e)
                                      (:size e)
-                                     (:pos (player-hit-box))
-                                     (:width (player-hit-box))
-                                     (:height (player-hit-box)))
+                                     (:pos (player/hit-box app-state))
+                                     (:width (player/hit-box app-state))
+                                     (:height (player/hit-box app-state)))
                               (do (dec-player-health)
                                   (if (= :do-not-die (:on-player-hit e))
                                     e
@@ -456,7 +397,8 @@
   (doall (map (fn [e]
                 (when (<= (:health e) 0)
                   (particle/enemy-dead app-state (:pos e))
-                  (play-sound :explosion)))
+                  (play-sound :explosion)
+                  ))
               (:enemies @app-state)))
   (when (and (<= (:health (first (:enemies @app-state)))
                  0)
@@ -548,6 +490,7 @@
     (let [start-x 100
           start-y 100
           dtext (fn [string y]
+                  (js/textSize 16)
                   (js/text string start-x (+ start-y y)))]
       (js/stroke 0 255 0)
       (js/fill 0 255 0)
@@ -594,15 +537,8 @@
                    (- (- (:bounds-x @app-state) width)))
                 (+ (:scroll-y @app-state)
                    (- (- (:bounds-y @app-state) height))))
-  (when (and (:game-started? @app-state)
-             (not (:game-over? @app-state)))
-    (when (not (or (= :scrolling-x (:state (:player @app-state)))
-                   (= :scrolling-y (:state (:player @app-state)))))
-      (player-movement))
-    (shoot)
-    (draw-player (-> @app-state
-                     :player
-                     :pos)))
+
+  (player/draw-and-update app-state shoot draw-player)
   (dungeon/spawn-room app-state after-room-spawn)
   (dungeon/scroll-to-next-room app-state)
   (update-particles)

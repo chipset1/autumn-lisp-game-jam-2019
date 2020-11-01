@@ -1,49 +1,56 @@
 (ns rabbit-dungeon-shooter.dungeon
   (:require [rabbit-dungeon-shooter.vector :as v]))
 
-(defn shift-left [app-state]
+(defn solid-tile? [app-state x y]
+  (let [col (js/floor (/ (- x (- (:bounds-x @app-state) (:width @app-state)))
+                         (:tile-size @app-state)))
+        row (js/floor (/ (- y (- (:bounds-y @app-state) (:height @app-state)))
+                         (:tile-size @app-state)))]
+    (= 1 (get-in (:tile-map @app-state) [row col]))))
+
+(defn- shift-left [app-state]
   (swap! app-state assoc-in [:player :state] :scrolling-x)
   (swap! app-state assoc :scroll-target-min-y 0)
-  (swap! app-state assoc :scroll-target-min-x (:width app-state))
+  (swap! app-state assoc :scroll-target-min-x (:width @app-state))
   (swap! app-state assoc :scroll-start-time (js/millis))
   )
 
-(defn shift-right [app-state]
+(defn- shift-right [app-state]
   (swap! app-state assoc-in [:player :state] :scrolling-x)
   (swap! app-state assoc :scroll-target-min-y 0)
-  (swap! app-state assoc :scroll-target-min-x (- (:width app-state)))
+  (swap! app-state assoc :scroll-target-min-x (- (:width @app-state)))
   (swap! app-state assoc :scroll-start-time (js/millis))
   )
 
-(defn shift-up [app-state]
+(defn- shift-up [app-state]
   (swap! app-state assoc-in [:player :state] :scrolling-y)
   (swap! app-state assoc :scroll-target-min-x 0)
-  (swap! app-state assoc :scroll-target-min-y (:height app-state))
+  (swap! app-state assoc :scroll-target-min-y (:height @app-state))
   (swap! app-state assoc :scroll-start-time (js/millis))
   )
 
-(defn shift-down [app-state]
+(defn- shift-down [app-state]
   (swap! app-state assoc-in [:player :state] :scrolling-y)
   (swap! app-state assoc :scroll-target-min-x 0)
-  (swap! app-state assoc :scroll-target-min-y (- (:height app-state)))
+  (swap! app-state assoc :scroll-target-min-y (- (:height @app-state)))
   (swap! app-state assoc :scroll-start-time (js/millis))
   )
 
-(defn add-door-right [app-state]
+(defn- add-door-right [app-state]
   (swap! app-state assoc-in [:tile-map 3 13] 0)
   (swap! app-state assoc-in [:tile-map 4 13] 0)
   (swap! app-state assoc-in [:tile-map 5 13] 0))
 
-(defn add-door-left [app-state]
+(defn- add-door-left [app-state]
   (swap! app-state assoc-in [:tile-map 3 0] 0)
   (swap! app-state assoc-in [:tile-map 4 0] 0)
   (swap! app-state assoc-in [:tile-map 5 0] 0))
 
-(defn add-door-top [app-state]
+(defn- add-door-top [app-state]
   (swap! app-state assoc-in [:tile-map 0 6] 0)
   (swap! app-state assoc-in [:tile-map 0 7] 0))
 
-(defn add-door-bottom [app-state]
+(defn- add-door-bottom [app-state]
   (swap! app-state assoc-in [:tile-map 8 6] 0)
   (swap! app-state assoc-in [:tile-map 8 7] 0))
 
@@ -53,7 +60,7 @@
   (add-door-top app-state)
   (add-door-bottom app-state))
 
-(defn on-room-spawn [app-state]
+(defn- on-room-spawn [app-state]
   (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
   (swap! app-state assoc :tile-map (:default-room @app-state)))
 
