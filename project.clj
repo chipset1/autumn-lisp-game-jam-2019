@@ -22,7 +22,7 @@
                 ;; The presence of a :figwheel configuration here
                 ;; will cause figwheel to inject the figwheel client
                 ;; into your build
-                :figwheel {:on-jsload "rabbit-dungeon-shooter.core/on-js-reload"
+                :figwheel {;; :on-jsload "rabbit-dungeon-shooter.core/on-js-reload"
                            ;; :open-urls will pop open your application
                            ;; in the default browser once Figwheel has
                            ;; started and compiled your application.
