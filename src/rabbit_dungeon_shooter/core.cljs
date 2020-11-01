@@ -458,9 +458,11 @@
                  (- (:bounds-y @app-state) height))
   (draw/tile-map app-state
                  :tile-map-previous
-                 (- (- (:bounds-x @app-state) width)
+                 (- (:bounds-x @app-state)
+                    width
                     (:scroll-target-min-x @app-state))
-                 (- (- (:bounds-y @app-state) height)
+                 (- (:bounds-y @app-state)
+                    height
                     (:scroll-target-min-y @app-state))))
 
 (defn key-pressed []
