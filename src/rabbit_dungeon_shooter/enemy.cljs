@@ -1,5 +1,6 @@
 (ns rabbit-dungeon-shooter.enemy
   (:require [rabbit-dungeon-shooter.vector :as v]
+            [rabbit-dungeon-shooter.assets :as assets]
             [rabbit-dungeon-shooter.util :as u]))
 
 (def enemy-directions [[0 1]
@@ -139,6 +140,23 @@
                                (v/normalize))})
         (assoc comp-data :shoot-time (js/millis)))
     comp-data))
+
+(defn draw-enemy [app-state e]
+  ;; (js/text (str "health " (:health e)) (v/x (:pos e)) (v/y (:pos e)))
+  (let [[x y] (:pos e)
+        size (:size e)
+        sprite-col (:col (:sprite-sheet e))
+        sprite-row (:row (:sprite-sheet e))
+        sprite-size 32]
+    (js/image (assets/image app-state :fantasy-tileset)
+              x
+              y
+              size
+              size
+              (* sprite-col sprite-size)
+              (* sprite-row sprite-size)
+              sprite-size
+              sprite-size)))
 
 (defn update-enemy [app-state enemy]
   ;; (update enemy :pos #(->> (v/sub (:pos (:player @app-state)) %)

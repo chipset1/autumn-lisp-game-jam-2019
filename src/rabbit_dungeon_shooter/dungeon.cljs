@@ -1,5 +1,6 @@
 (ns rabbit-dungeon-shooter.dungeon
-  (:require [rabbit-dungeon-shooter.vector :as v]))
+  (:require [rabbit-dungeon-shooter.vector :as v]
+            [rabbit-dungeon-shooter.assets :as assets]))
 
 (defn solid-tile? [app-state x y]
   (let [col (js/floor (/ (- x (- (:bounds-x @app-state) (:width @app-state)))
@@ -153,3 +154,24 @@
       (when (< (js/random) door-spawn-chance) (add-door-right app-state))
       (when (< (js/random) door-spawn-chance) (add-door-top app-state))
       (after-room-spawn))))
+
+(defn- draw-wall-tile [app-state x y]
+  (js/image (assets/image app-state :fantasy-tileset)
+            x
+            y
+            (:tile-size @app-state)
+            (:tile-size @app-state)
+            64
+            64
+            32
+            32))
+
+(defn draw-tile-map [app-state tile-map-key offset-x offset-y]
+  (doall (map-indexed (fn [i row]
+                        (doall (map-indexed (fn [j tile]
+                                              (when (= tile 1)
+                                                (draw-wall-tile app-state
+                                                           (+ offset-x (* j (:tile-size @app-state)))
+                                                           (+ offset-y (* i (:tile-size @app-state))))))
+                                            row)))
+                      (tile-map-key @app-state))))

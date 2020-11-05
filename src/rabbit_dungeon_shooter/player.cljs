@@ -1,7 +1,6 @@
 (ns rabbit-dungeon-shooter.player
   (:require [rabbit-dungeon-shooter.vector :as v]
             [rabbit-dungeon-shooter.dungeon :as dungeon]
-            [rabbit-dungeon-shooter.draw :as draw]
             [rabbit-dungeon-shooter.assets :as assets]))
 
 (defn hit-box
@@ -88,6 +87,29 @@
            (kd js/LEFT_ARROW) (shoot-dir [-1 0])
            (kd js/RIGHT_ARROW) (shoot-dir [1 0])))))
 
+(defn draw-player [app-state]
+  (let [[x y] (-> @app-state
+                  :player
+                  :pos)
+        player-image #(js/image (assets/image app-state :fantasy-tileset)
+                                x
+                                y
+                                (:player-size @app-state)
+                                (:player-size @app-state)
+                                32
+                                (* 20 32)
+                                32
+                                32)]
+    (if (< (- (js/millis)
+              (:health-dec-time @app-state))
+           (:health-dec-interval @app-state))
+      (when (> (- (js/millis)
+                  (:invulnerable-flash-time @app-state))
+               (:invulnerable-flash-interval @app-state))
+        (swap! app-state assoc :invulnerable-flash-time (js/millis))
+        (player-image))
+      (player-image))))
+
 (defn draw-and-update [app-state]
   (when (and (:game-started? @app-state)
              (not (:game-over? @app-state)))
@@ -95,4 +117,4 @@
                    (= :scrolling-y (:state (:player @app-state)))))
       (player-movement app-state))
     (shoot app-state)
-    (draw/player app-state)))
+    (draw-player app-state)))

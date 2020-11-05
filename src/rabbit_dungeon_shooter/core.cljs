@@ -4,9 +4,7 @@
             [rabbit-dungeon-shooter.player :as player]
             [rabbit-dungeon-shooter.dungeon :as dungeon]
             [rabbit-dungeon-shooter.particle :as particle]
-            [rabbit-dungeon-shooter.assets :as assets]
-            [rabbit-dungeon-shooter.draw :as draw]
-            ))
+            [rabbit-dungeon-shooter.assets :as assets]))
 
 (enable-console-print!)
 
@@ -450,20 +448,20 @@
   (display-bullets :bullets)
   (display-bullets :enemy-bullets)
   (update-enemies)
-  (doall (map #(draw/enemy app-state %)
+  (doall (map #(enemy/draw-enemy app-state %)
               (:enemies @app-state)))
-  (draw/tile-map app-state
-                 :tile-map
-                 (- (:bounds-x @app-state) width)
-                 (- (:bounds-y @app-state) height))
-  (draw/tile-map app-state
-                 :tile-map-previous
-                 (- (:bounds-x @app-state)
-                    width
-                    (:scroll-target-min-x @app-state))
-                 (- (:bounds-y @app-state)
-                    height
-                    (:scroll-target-min-y @app-state))))
+  (dungeon/draw-tile-map app-state
+                         :tile-map
+                         (- (:bounds-x @app-state) width)
+                         (- (:bounds-y @app-state) height))
+  (dungeon/draw-tile-map app-state
+                         :tile-map-previous
+                         (- (:bounds-x @app-state)
+                            width
+                            (:scroll-target-min-x @app-state))
+                         (- (:bounds-y @app-state)
+                            height
+                            (:scroll-target-min-y @app-state))))
 
 (defn key-pressed []
   ; control = 17 [ (left square bracket) = 219
