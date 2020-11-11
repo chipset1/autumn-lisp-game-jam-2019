@@ -60,11 +60,7 @@
                                          (- (/ height 2) (/ tile-size 2))]
                                    :health 6
                                    :speed 5
-                                   :max-health 6
-                                   :direction [0 0]
-                                   :sword {:angle 0
-                                           :swing-time 100
-                                           :swing-start 0}}
+                                   :max-health 6}
                           :game-over? false
                           :canvas-scale 1.0
                           :health-dec-interval 1000
