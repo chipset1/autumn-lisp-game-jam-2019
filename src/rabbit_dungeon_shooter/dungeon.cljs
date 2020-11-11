@@ -10,28 +10,28 @@
     (= 1 (get-in (:tile-map @app-state) [row col]))))
 
 (defn- shift-left [app-state]
-  (swap! app-state assoc-in [:player :state] :scrolling-x)
+  (swap! app-state assoc :game-state :scrolling-x)
   (swap! app-state assoc :scroll-target-min-y 0)
   (swap! app-state assoc :scroll-target-min-x (:width @app-state))
   (swap! app-state assoc :scroll-start-time (js/millis))
   )
 
 (defn- shift-right [app-state]
-  (swap! app-state assoc-in [:player :state] :scrolling-x)
+  (swap! app-state assoc :game-state :scrolling-x)
   (swap! app-state assoc :scroll-target-min-y 0)
   (swap! app-state assoc :scroll-target-min-x (- (:width @app-state)))
   (swap! app-state assoc :scroll-start-time (js/millis))
   )
 
 (defn- shift-up [app-state]
-  (swap! app-state assoc-in [:player :state] :scrolling-y)
+  (swap! app-state assoc :game-state :scrolling-y)
   (swap! app-state assoc :scroll-target-min-x 0)
   (swap! app-state assoc :scroll-target-min-y (:height @app-state))
   (swap! app-state assoc :scroll-start-time (js/millis))
   )
 
 (defn- shift-down [app-state]
-  (swap! app-state assoc-in [:player :state] :scrolling-y)
+  (swap! app-state assoc :game-state :scrolling-y)
   (swap! app-state assoc :scroll-target-min-x 0)
   (swap! app-state assoc :scroll-target-min-y (- (:height @app-state)))
   (swap! app-state assoc :scroll-start-time (js/millis))
@@ -67,9 +67,7 @@
 
 (defn scroll-to-next-room [app-state]
   (when (= :scrolling-y
-           (-> @app-state
-               :player
-               :state))
+           (:game-state @app-state))
     (swap! app-state
            assoc
            :scroll-y
@@ -80,9 +78,7 @@
                    (:scroll-target-min-y @app-state)
                    0)))
   (when (= :scrolling-x
-           (-> @app-state
-               :player
-               :state))
+           (:game-state @app-state))
     (swap! app-state
            assoc
            :scroll-x
@@ -97,10 +93,7 @@
               (:scroll-interval @app-state)))
     (swap! app-state assoc :scroll-x 0)
     (swap! app-state assoc :scroll-y 0)
-    (swap! app-state
-           assoc-in
-           [:player :state]
-           :not-scrolling)))
+    (swap! app-state assoc :game-state :not-scrolling)))
 
 (defn spawn-room
   "update bounds, reset tile-map to default room, create door where entered, randomly create other doors"

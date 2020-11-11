@@ -64,8 +64,7 @@
                                    :direction [0 0]
                                    :sword {:angle 0
                                            :swing-time 100
-                                           :swing-start 0}
-                                   :state nil}
+                                           :swing-start 0}}
                           :game-over? false
                           :canvas-scale 1.0
                           :health-dec-interval 1000
@@ -74,6 +73,7 @@
                           :enemy-size tile-size
                           :player-size tile-size
                           :tile-size tile-size
+                          :game-state nil
                           :game-started? false
                           :game-completed? false}))
 
@@ -263,13 +263,9 @@
 
 (defn update-enemies []
   (when (and (not= :scrolling-x
-               (-> @app-state
-                   :player
-                   :state))
+                   (:game-state @app-state))
              (not= :scrolling-y
-                   (-> @app-state
-                       :player
-                       :state)))
+                   (:game-state @app-state)))
       (swap! app-state
           update
           :enemies

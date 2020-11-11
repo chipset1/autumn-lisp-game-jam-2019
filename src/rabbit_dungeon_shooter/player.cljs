@@ -113,8 +113,8 @@
 (defn draw-and-update [app-state]
   (when (and (:game-started? @app-state)
              (not (:game-over? @app-state)))
-    (when (not (or (= :scrolling-x (:state (:player @app-state)))
-                   (= :scrolling-y (:state (:player @app-state)))))
+    (when (not (or (= :scrolling-x (:game-state @app-state))
+                   (= :scrolling-y (:game-state @app-state))))
       (player-movement app-state))
     (shoot app-state)
     (draw-player app-state)))
