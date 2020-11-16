@@ -305,10 +305,12 @@
 
 (defn reset-level []
   (dungeon/init-starting-room app-state)
-  (swap! app-state assoc :tile-map-previous (:tile-map @app-state))
+  (swap! app-state
+         assoc
+         :tile-map-previous (:tile-map @app-state)
+         :enemies []
+         :enemy-index -1)
   (swap! app-state assoc-in [:player :health] (:max-health (:player @app-state)))
-  (swap! app-state assoc :enemies [])
-  (swap! app-state assoc :enemy-index -1)
   (swap! app-state
          assoc-in
          [:player :pos]
@@ -415,9 +417,11 @@
     (js/text "You completed the game.\n           THE END" (- (/ width 2) 200) (- (/ height 2) 50)))
   (when (<= (:health (:player @app-state))
             0)
-    (swap! app-state assoc :enemies [])
-    (swap! app-state assoc :enemy-bullets [])
-    (swap! app-state assoc :game-over? true))
+    (swap! app-state
+           assoc
+           :enemies []
+           :enemy-bullets []
+           :game-over? true))
   (when (:game-over? @app-state)
     (js/push)
     (js/textSize 32)

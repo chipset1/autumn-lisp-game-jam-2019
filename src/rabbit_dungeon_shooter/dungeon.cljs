@@ -95,9 +95,11 @@
   (when (> (js/millis)
            (+ (:scroll-start-time @app-state)
               (:scroll-interval @app-state)))
-    (swap! app-state assoc :scroll-x 0)
-    (swap! app-state assoc :scroll-y 0)
-    (swap! app-state assoc :game-state :not-scrolling)))
+    (swap! app-state
+           assoc
+           :scroll-x 0
+           :scroll-y 0
+           :game-state :not-scrolling)))
 
 (defn spawn-room
   "update bounds, reset tile-map to default room, create door where entered, randomly create other doors"
