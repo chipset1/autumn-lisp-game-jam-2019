@@ -14,6 +14,7 @@
 (def height (* 9 tile-size))
 (def player-bullet-speed 15)
 (def bullet-size 10)
+(def hud-text-pos [100 100])
 (def corner-positions [[tile-size tile-size]
                        [(- width (* tile-size 2)) tile-size]
                        [tile-size (- height (* tile-size 2))]
@@ -359,6 +360,19 @@
                (js/map health 0 100 0 bar-max-width)
                20))))
 
+(defn draw-hud-text [string y]
+  (js/textSize 16)
+  (js/text string
+           (v/x hud-text-pos)
+           (+ (v/y hud-text-pos) y)))
+
+(defn draw-debug-text [values]
+  (js/stroke 0 255 0)
+  (js/fill 0 255 0)
+  (doall (map-indexed (fn [index value]
+                        (draw-hud-text value (* index 10)))
+                      values)))
+
 (defn draw-start-screen []
   (js/fill 255)
   (js/textSize 60)
@@ -381,34 +395,21 @@
   (js/background 50)
   (js/scale (:canvas-scale @app-state))
   (if debug
-    (let [start-x 100
-          start-y 100
-          dtext (fn [string y]
-                  (js/textSize 16)
-                  (js/text string start-x (+ start-y y)))]
-      (js/stroke 0 255 0)
-      (js/fill 0 255 0)
-      (dtext (int (js/frameRate)) 0)
-      (dtext (:bounds-x @app-state) 10)
-      (dtext (:bounds-y @app-state) 20)
-      (dtext (str "pos: " (:pos (:player @app-state))) 30)
-      (dtext (:direction (:player @app-state)) 40)
-      (dtext (str "enemy 0: " (:enemies @app-state)) 50)
-      (dtext (str "player money: " (:money (:player @app-state))) 60)
-      (dtext (str "player health: " (:health (:player @app-state)) " / 6") 70)
-      (dtext (str "enemy bullets: "(:enemy-bullets @app-state)) 80)
-      (dtext (str (:state (:player @app-state))) 90)
-      (dtext (str "game-over?: " (:game-over? @app-state)) 100)
-      (dtext (str "enemy-index: " (:enemy-index @app-state)) 110))
-    (let [start-x 100
-          start-y 100
-          dtext (fn [string y]
-                  (js/textSize 16)
-                  (js/text string start-x (+ start-y y)))]
-      (js/fill 255)
-      (js/stroke 255)
-      (dtext (str "health: " (:health (:player @app-state)) " / 6") 0)
-      (draw-health-bar 200 92)))
+    (draw-debug-text [(int (js/frameRate))
+                      (:bounds-x @app-state)
+                      (:bounds-y @app-state)
+                      (str "pos: " (:pos (:player @app-state)))
+                      (:scroll-target-min-x @app-state)
+                      (str "enemy 0: " (:enemies @app-state))
+                      (str "player money: " (:money (:player @app-state)))
+                      (str "player health: " (:health (:player @app-state)) " / 6")
+                      (str "enemy bullets: "(:enemy-bullets @app-state))
+                      (str "game-over?: " (:game-over? @app-state))
+                      (str "enemy-index: " (:enemy-index @app-state))])
+    (do (js/fill 255)
+        (js/stroke 255)
+        (draw-hud-text (str "health: " (:health (:player @app-state)) " / 6") 0)
+        (draw-health-bar 200 92)))
   (draw-boss-health-bar)
   (when (not (:game-started? @app-state))
     (draw-start-screen))
